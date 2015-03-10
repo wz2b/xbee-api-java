@@ -29,9 +29,8 @@
     </developers>
 
     <scm>
-        <connection>git@github.com:wz2b/xbee-api-java.git</connection>
-        <developerConnection>git@github.com:wz2b/xbee-api-java.git</developerConnection>
-        <url>git@github.com:wz2b/xbee-api-java.git</url>
+        <connection>scm:git:git@github.com:wz2b/xbee-api-java.git</connection>
+        <url>scm:git:git@github.com:wz2b/xbee-api-java.git</url>
     </scm>
 
 
