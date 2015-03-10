@@ -6,7 +6,88 @@
 
     <groupId>com.autofrog.xbee</groupId>
     <artifactId>xbee-api-java</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
+
+    <name>xbee-api-java</name>
+    <description>A library for parsing xbee api messages</description>
+    <url>https://github.com/wz2b/xbee-api-java</url>
+
+    <licenses>
+        <license>
+            <name>LGPL-2.1</name>
+            <url>http://www.opensource.org/licenses/lgpl-2.1.php</url>
+
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Christopher Piggott</name>
+            <email>cpiggott@gmail.com</email>
+            <organizationUrl>https://github.com/wz2b</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>git@github.com:wz2b/xbee-api-java.git</connection>
+        <developerConnection>git@github.com:wz2b/xbee-api-java.gitt</developerConnection>
+        <url>git@github.com:wz2b/xbee-api-java.git</url>
+    </scm>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-repository-plugin</artifactId>
+                <version>2.1</version>
+            </plugin>
+        </plugins>
+
+    </build>
 
     <dependencies>
         <dependency>
@@ -22,7 +103,7 @@
             <version>3.3.1</version>
             <scope>test</scope>
         </dependency>
-        
+
     </dependencies>
 
 </project>
