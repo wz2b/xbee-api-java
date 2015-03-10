@@ -1,9 +1,25 @@
-*.class
+build
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+*.ipr
+*.iws
+out/
+.midea_modules/
+altassian-ide-plugin.xml
+
+# Sensitive or high-churn files:
+.idea/dataSources.ids
+.idea/dataSources.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/uiDesigner.xml
+
+
 
 # Package Files #
+*.class
 *.jar
 *.war
 *.ear
