@@ -4,7 +4,7 @@
 
     <groupId>com.autofrog.xbee</groupId>
     <artifactId>xbee-api-java</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 
     <name>xbee-api-java</name>
     <description>A library for parsing xbee api messages</description>
@@ -29,7 +29,7 @@
     <scm>
         <connection>scm:git:git@github.com:wz2b/xbee-api-java.git</connection>
         <url>scm:git:git@github.com:wz2b/xbee-api-java.git</url>
-      <tag>xbee-api-java-0.1.0</tag>
+        <tag>xbee-api-java-0.1.1</tag>
   </scm>
 
 
