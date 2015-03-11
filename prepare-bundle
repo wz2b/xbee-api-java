@@ -1,0 +1,156 @@
+#!/bin/bash
+set -e
+
+#
+# This script exists to sign, jar, and bundle up the required artifacts for a
+# release into maven central.  This script exists for several reasons:
+#
+#   1. There are bugs in maven-gpg-plugin, including knowing needs signing
+#   2. There isn't a way to specify that
+#   3. The maven-repository-plugin doesn't put the signatures into the bundle
+#   4. The maven-release-plugin gives me fits - I'd rather do it myself.
+#
+# What is a bundle?  It's a single file that sonatype understands and considers
+# acceptable for publication to central.
+#
+# This script examines the pom using the maven help:evaluate goal, so the only
+# necessary configuration (for a standard maven project layout) should be to
+# change the key.  However, be warned this probably won't work if you have the
+# version number defined in a parent pom - I'm not entirely sure.  (Maybe it
+# does, but I'm feeling too lazy to test it now).
+#
+# I tried my best to make sure this works on both windows and linux bash 3.1
+# or later.
+
+
+
+#
+# Which key to use
+#
+key='671D103A'
+
+#
+# Location of the files we're signing
+#
+target="target"
+
+
+# Create an alias for filtering the noise out of maven's output
+shopt -s expand_aliases
+alias nf="grep -v '^\['"
+
+
+echo "Examining pom..."
+
+#
+# Try to find a fina.Name attribute if it exists
+#
+finalname=$(mvn help:evaluate -Dexpression=project.build.finalname | nf )
+
+#
+# If a finalName was not defined, use the artifactId and version
+#
+
+if [[ "$finalname" = "null"* ]] ; then
+	echo "No finalOutput was defined, looking deeper ..."
+	version=$(mvn help:evaluate -Dexpression=project.version | nf )
+	artifactId=$(mvn help:evaluate -Dexpression=project.artifactId | nf )
+	finalname=$artifactId-$version
+fi
+
+
+#
+# Which artifacts to include
+#
+ARTIFACTS=( 				\
+	${finalname}.pom 	\
+	${finalname}.jar		\
+	${finalname}-sources.jar	\
+	${finalname}-javadoc.jar )
+
+#
+# Define the name of the bundle
+#
+bundle="${target}"/"${finalname}"-bundle.jar
+
+
+#############################################################################
+#
+# PROCESSING
+#
+#############################################################################
+
+if [ -e "${bundle}" ] ; then
+	echo "Removing old ${bundle}"
+	rm "${bundle}"
+fi
+
+
+#
+# Copy the pom
+#
+cp pom.xml "${target}/${finalname}.pom"
+
+count=0
+
+declare -a RESULTS
+for item in "${ARTIFACTS[@]}" ; do
+	#
+	# Sign
+	#
+	gpg2 -abq --yes --default-key="${key}" "${target}"/"${item}"
+
+
+	#
+	# Verify
+	#
+	if gpg2 --quiet \
+		--batch \
+		--no-tty \
+		--verify \
+		${target}/${item}.asc \
+		${target}/${item}
+	then
+
+		RESULTS+=("Signature on ${item} is GOOD")
+
+		if [ "${count}" -eq 0 ] ; then
+			(( count++ ))
+			jar -cf "${bundle}" -C "${target}" "${item}"
+		else
+			jar -uf "${bundle}" -C "${target}" "${item}"
+
+		fi
+		jar -uf "${bundle}" -C "${target}" "${item}".asc
+		(( count++ ))
+
+	else
+		RESULTS+=("Signature on ${item} is BAD")
+	fi
+
+	echo "Added ${count} files"
+done
+
+
+
+#############################################################################
+#
+# A lot of the commands above are extremely noisy, so print a bunch of
+# spaces here and display the collected results.
+#
+#############################################################################
+
+echo ''
+echo ''
+
+# Show the results of the signature verifications
+for result in "${RESULTS[@]}" ; do
+	echo $result
+done
+
+echo ''
+
+# Show contents of the jar
+jar -tvf ${bundle}
+
+

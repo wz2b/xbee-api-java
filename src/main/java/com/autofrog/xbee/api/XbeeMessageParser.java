@@ -45,7 +45,7 @@ public class XbeeMessageParser {
     private final List<XbeeMessageListener> allFrameTypesListeners;
     private final List<XbeeParsingExceptionListener> errorListeners;
 
-    protected XbeeMessageParser() {
+    public XbeeMessageParser() {
         frameTypeSpecificListeners = new ConcurrentHashMap<XbeeMessageType, List<XbeeMessageListener>>();
         allFrameTypesListeners = new CopyOnWriteArrayList<XbeeMessageListener>();
         errorListeners = new CopyOnWriteArrayList<XbeeParsingExceptionListener>();
@@ -108,7 +108,7 @@ public class XbeeMessageParser {
             l.onXbeeMessage(this, msg);
         }
 
-        List<XbeeMessageListener> specificListeners = frameTypeSpecificListeners.get(msg.getRawFrameType());
+        List<XbeeMessageListener> specificListeners = frameTypeSpecificListeners.get( XbeeMessageType.lookup( msg.getRawFrameType() ) );
         if (specificListeners != null) {
             for (XbeeMessageListener specificListener : specificListeners) {
                 specificListener.onXbeeMessage(this, msg);
