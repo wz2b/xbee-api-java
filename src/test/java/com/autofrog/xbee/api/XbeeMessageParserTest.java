@@ -60,7 +60,7 @@ public class XbeeMessageParserTest extends EasyMockSupport {
     };
 
     @TestSubject
-    private XbeeMessageParser parser = new XbeeMessageParser();
+    private XbeeMessageParser parser = XbeeMessageParser.createDefaultMessageParser();
     @Mock
     private XbeeParsingExceptionListener mockExceptionListener;
     @Mock

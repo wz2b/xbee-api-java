@@ -2,10 +2,6 @@ package com.autofrog.xbee.api.messages;
 
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
 /**
  * Created by chrisp on 009 3/9/2015.
  */
@@ -19,54 +15,22 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
     private short clusterId;
     private byte rxOpts;
 
-
-    private XbeeExplicitRxMessage(byte[] data) {
-        super.rawFrameType = XbeeMessageType.EXPLICIT_RX.valueOf();
-        super.rawData = data;
-    }
-
-    /**
-     * Helper method to parse messages.  This builds a new byte buffer every time, so
-     * it's more efficient to use the alternative methodt hat takes a byte buffer in
-     * as the parameter.
-     *
-     * @param bytes
-     * @return an explicit message, or null if there isn't one
-     * @throws Exception if something goes wrong (e.g. IO Exception)
-     */
-    public static XbeeExplicitRxMessage create(byte[] bytes) throws IOException {
-        return create(ByteBuffer.wrap(bytes));
-    }
-
-    /**
-     * Create this message type from a byte buffer.
-     *
-     * @param bb
-     * @return an XbeeExplicitRxMessage, or null if this byte buffer doesn't match the criteria
-     */
-    public static XbeeExplicitRxMessage create(ByteBuffer bb) {
-
-        /* Preserve the current byte ordering on the buffer */
-        ByteOrder oldOrder = bb.order();
-
-        bb.order(ByteOrder.BIG_ENDIAN);
-        XbeeExplicitRxMessage o = new XbeeExplicitRxMessage(bb.array());
-
-        o.sourceAddress = bb.getLong();
-        o.sourceNetworkAddress = bb.getShort();
-
-        o.sourceEndpoint = bb.get();
-        o.destEndpoint = bb.get();
-
-        o.clusterId = bb.getShort();
-        o.profileId = bb.getShort();
-        o.rxOpts = bb.get();
-
-        o.rawData = new byte[bb.remaining()];
-        bb.get(o.rawData);
-        return o;
-
-
+    public XbeeExplicitRxMessage(long sourceAddress,
+                                 short sourceNetworkAddress,
+                                 byte sourceEndpoint,
+                                 byte destEndpoint,
+                                 short profileId,
+                                 short clusterId,
+                                 byte rxOpts,
+                                 byte[] data) {
+        super(XbeeMessageType.EXPLICIT_RX.getFrameType(), data);
+        this.sourceAddress = sourceAddress;
+        this.sourceNetworkAddress = sourceNetworkAddress;
+        this.sourceEndpoint = sourceEndpoint;
+        this.destEndpoint = destEndpoint;
+        this.profileId = profileId;
+        this.clusterId = clusterId;
+        this.rxOpts = rxOpts;
     }
 
     public short getClusterId() {

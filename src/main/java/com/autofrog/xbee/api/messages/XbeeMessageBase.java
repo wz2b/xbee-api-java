@@ -7,6 +7,10 @@ public abstract class XbeeMessageBase {
     protected byte[] rawData;
     protected byte rawFrameType;
 
+    protected XbeeMessageBase(byte rawFrameType, byte[] rawData) {
+        this.rawData = rawData;
+        this.rawFrameType = rawFrameType;
+    }
 
     public byte getRawFrameType() {
         return rawFrameType;
@@ -15,5 +19,4 @@ public abstract class XbeeMessageBase {
     public byte[] getRawData() {
         return rawData;
     }
-
 }

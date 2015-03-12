@@ -108,8 +108,8 @@ for item in "${ARTIFACTS[@]}" ; do
 		--batch \
 		--no-tty \
 		--verify \
-		${target}/${item}.asc \
-		${target}/${item}
+		"${target}/${item}.asc" \
+		"${target}/${item}"
 	then
 
 		RESULTS+=("Signature on ${item} is GOOD")
@@ -145,12 +145,12 @@ echo ''
 
 # Show the results of the signature verifications
 for result in "${RESULTS[@]}" ; do
-	echo $result
+	echo "$result"
 done
 
 echo ''
 
 # Show contents of the jar
-jar -tvf ${bundle}
+jar -tvf "${bundle}"
 
 

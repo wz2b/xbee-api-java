@@ -5,12 +5,11 @@ import com.autofrog.xbee.api.exceptions.XbeeEmptyMessageException;
 import com.autofrog.xbee.api.exceptions.XbeeException;
 import com.autofrog.xbee.api.listeners.XbeeMessageListener;
 import com.autofrog.xbee.api.listeners.XbeeParsingExceptionListener;
-import com.autofrog.xbee.api.messages.XbeeExplicitRxMessage;
 import com.autofrog.xbee.api.messages.XbeeMessageBase;
+import com.autofrog.xbee.api.parsers.XbeeRootParser;
 import com.autofrog.xbee.api.protocol.XbeeApiConstants;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,12 +43,28 @@ public class XbeeMessageParser {
     private final Map<XbeeMessageType, List<XbeeMessageListener>> frameTypeSpecificListeners;
     private final List<XbeeMessageListener> allFrameTypesListeners;
     private final List<XbeeParsingExceptionListener> errorListeners;
+    private final XbeeRootParser rootParser;
 
-    public XbeeMessageParser() {
+    public static XbeeMessageParser createDefaultMessageParser() {
+        try {
+            return new XbeeMessageParser();
+        } catch (XbeeException e) {
+            return null;
+        }
+    }
+
+    public XbeeMessageParser() throws XbeeException {
+        this(new XbeeRootParser());
+    }
+
+
+    public XbeeMessageParser(XbeeRootParser rootParser) {
         frameTypeSpecificListeners = new ConcurrentHashMap<XbeeMessageType, List<XbeeMessageListener>>();
         allFrameTypesListeners = new CopyOnWriteArrayList<XbeeMessageListener>();
         errorListeners = new CopyOnWriteArrayList<XbeeParsingExceptionListener>();
+        this.rootParser =rootParser;
     }
+
 
     /**
      * Add a listener for ALL xbee messages
@@ -108,7 +123,7 @@ public class XbeeMessageParser {
             l.onXbeeMessage(this, msg);
         }
 
-        List<XbeeMessageListener> specificListeners = frameTypeSpecificListeners.get( XbeeMessageType.lookup( msg.getRawFrameType() ) );
+        List<XbeeMessageListener> specificListeners = frameTypeSpecificListeners.get( XbeeMessageType.getMessageClassFromFrameType(msg.getRawFrameType()) );
         if (specificListeners != null) {
             for (XbeeMessageListener specificListener : specificListeners) {
                 specificListener.onXbeeMessage(this, msg);
@@ -204,7 +219,7 @@ public class XbeeMessageParser {
                         if (expected == b) {
 
                             try {
-                                return buildSpecificMessage(frameType, buf);
+                                return rootParser.parse(frameType, buf);
                             } catch ( Exception e) {
                                 /* Notify of some kind of parsing error */
                                 notifyListenersOfException(new XbeeException());
@@ -232,22 +247,6 @@ public class XbeeMessageParser {
      */
     public RxState getRxState() {
         return rxState;
-    }
-
-    private XbeeMessageBase buildSpecificMessage(byte frameType, byte[] buf) throws IOException {
-        XbeeMessageType type = XbeeMessageType.lookup(frameType);
-
-        switch (type) {
-            case EXPLICIT_RX:
-                return XbeeExplicitRxMessage.create(buf);
-            case NODE_DISCOVERY:
-                break;
-            case RX_IO_SAMPLE:
-                break;
-            default:
-
-        }
-        return null;
     }
 
     public String dumpParserState() {
