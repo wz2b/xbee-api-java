@@ -6,6 +6,7 @@ import com.autofrog.xbee.api.exceptions.XbeeException;
 import com.autofrog.xbee.api.listeners.XbeeMessageListener;
 import com.autofrog.xbee.api.listeners.XbeeParsingExceptionListener;
 import com.autofrog.xbee.api.messages.XbeeMessageBase;
+import com.autofrog.xbee.api.messages.XbeeTransmitATCommand;
 import com.autofrog.xbee.api.parsers.XbeeRootParser;
 import com.autofrog.xbee.api.protocol.XbeeApiConstants;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Main entry point for the Xbee API parser.
@@ -39,12 +42,20 @@ public class XbeeMessageParser {
     private byte checksum;
     private byte[] buf = null;
     private boolean escaped = false;
-    private boolean transmissionPaused = false;
+    private boolean transmissionPausedXonXoff = false;
     private final Map<XbeeMessageType, List<XbeeMessageListener>> frameTypeSpecificListeners;
     private final List<XbeeMessageListener> allFrameTypesListeners;
     private final List<XbeeParsingExceptionListener> errorListeners;
     private final XbeeRootParser rootParser;
+    private final XbeeTransmitter sender;
+    private final ScheduledThreadPoolExecutor scheduler;
 
+    /**
+     * Convenience factory to create a new read-only XbeeMessageParser using the default message
+     * types.  Unlike the constructor, this won't throw an exception.
+     *
+     * @return parser, or null if one could not be created
+     */
     public static XbeeMessageParser createDefaultMessageParser() {
         try {
             return new XbeeMessageParser();
@@ -53,16 +64,64 @@ public class XbeeMessageParser {
         }
     }
 
-    public XbeeMessageParser() throws XbeeException {
-        this(new XbeeRootParser());
+    /**
+     * Convenience factory to create a new read-write XbeeMessageParser using the default message
+     * types.  Unlike the constructor, this won't throw an exception.
+     *
+     * @return parser, or null if one could not be created
+     */
+    public static XbeeMessageParser createDefaultMessageParser(XbeeTransmitter sender) {
+        try {
+            return new XbeeMessageParser(new XbeeRootParser(), sender);
+        } catch (XbeeException e) {
+            return null;
+        }
     }
 
+    /**
+     * Create a read-only parser using the default message types
+     *
+     * @throws XbeeException
+     */
+    public XbeeMessageParser() throws XbeeException {
+        this(new XbeeRootParser(), null);
+    }
 
+    /**
+     * Create a read-write parser using the default message types
+     *
+     * @param sender
+     * @throws XbeeException
+     */
+    public XbeeMessageParser(XbeeTransmitter sender) throws XbeeException {
+        this(new XbeeRootParser(), sender);
+    }
+
+    /**
+     * Create a read-only message parser using a custom root message processor, which allows users
+     * to define their own messages.
+     *
+     * @param rootParser
+     */
     public XbeeMessageParser(XbeeRootParser rootParser) {
+        this(rootParser, null);
+    }
+
+    /**
+     * Create a read-write message parser using a custom root message processor, which allows
+     * users to define their own messages.
+     *
+     * @param rootParser
+     * @param sender
+     */
+    public XbeeMessageParser(XbeeRootParser rootParser, XbeeTransmitter sender) {
         frameTypeSpecificListeners = new ConcurrentHashMap<XbeeMessageType, List<XbeeMessageListener>>();
         allFrameTypesListeners = new CopyOnWriteArrayList<XbeeMessageListener>();
         errorListeners = new CopyOnWriteArrayList<XbeeParsingExceptionListener>();
-        this.rootParser =rootParser;
+        this.rootParser = rootParser;
+        this.sender = sender;
+        this.scheduler = new ScheduledThreadPoolExecutor(1);
+        scheduler.setMaximumPoolSize(1);
     }
 
 
@@ -103,7 +162,6 @@ public class XbeeMessageParser {
         }
     }
 
-
     public void addXbeeExceptionListener(XbeeParsingExceptionListener listener) {
         errorListeners.add(listener);
     }
@@ -123,11 +181,19 @@ public class XbeeMessageParser {
             l.onXbeeMessage(this, msg);
         }
 
-        List<XbeeMessageListener> specificListeners = frameTypeSpecificListeners.get( XbeeMessageType.getMessageClassFromFrameType(msg.getRawFrameType()) );
-        if (specificListeners != null) {
-            for (XbeeMessageListener specificListener : specificListeners) {
-                specificListener.onXbeeMessage(this, msg);
+        byte frameTypeCode = msg.getRawFrameType();
+        XbeeMessageType frameType = XbeeMessageType.getMessageClassFromFrameType(frameTypeCode);
+        if(frameType != null) {
+            List<XbeeMessageListener> specificListeners = frameTypeSpecificListeners.get(frameType);
+            if (specificListeners != null) {
+                for (XbeeMessageListener specificListener : specificListeners) {
+                    specificListener.onXbeeMessage(this, msg);
+                }
             }
+        }
+
+        for(XbeeMessageListener allListener : allFrameTypesListeners) {
+            allListener.onXbeeMessage(this, msg);
         }
     }
 
@@ -153,6 +219,7 @@ public class XbeeMessageParser {
 
     /**
      * The main state machine
+     *
      * @param b
      * @return
      */
@@ -170,10 +237,10 @@ public class XbeeMessageParser {
                 escaped = true;
                 break;
             case XbeeApiConstants.API_XON:
-                transmissionPaused = false;
+                transmissionPausedXonXoff = false;
                 break;
             case XbeeApiConstants.API_XOFF:
-                transmissionPaused = true;
+                transmissionPausedXonXoff = true;
                 break;
 
             default:
@@ -209,7 +276,7 @@ public class XbeeMessageParser {
                         buf[count++] = b;
                         checksum = (byte) ((checksum + b) & 0xFF);
                         /* This is len-1 to skip the frame type */
-                        if (count >= (len-1)) {
+                        if (count >= (len - 1)) {
                             rxState = RxState.WAITING_FOR_CHECKSUM;
                         }
                         break;
@@ -220,7 +287,7 @@ public class XbeeMessageParser {
 
                             try {
                                 return rootParser.parse(frameType, buf);
-                            } catch ( Exception e) {
+                            } catch (Exception e) {
                                 /* Notify of some kind of parsing error */
                                 notifyListenersOfException(new XbeeException());
 
@@ -247,6 +314,27 @@ public class XbeeMessageParser {
      */
     public RxState getRxState() {
         return rxState;
+    }
+
+
+    public void start() {
+        scheduler.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                XbeeTransmitATCommand command = new XbeeTransmitATCommand("ND");
+                if (sender != null) {
+                    sender.send(command);
+                }
+            }
+        }, 0, 10, TimeUnit.SECONDS);
+    }
+
+    public void stop() throws InterruptedException {
+        scheduler.shutdown();
+        scheduler.awaitTermination(30, TimeUnit.SECONDS);
+        if (sender != null) {
+            sender.shutdown(30, TimeUnit.SECONDS);
+        }
     }
 
     public String dumpParserState() {

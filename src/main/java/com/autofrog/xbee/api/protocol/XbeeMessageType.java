@@ -14,6 +14,7 @@ import java.util.Map;
  *   requirements (so not right now)
  */
 public enum XbeeMessageType {
+    AT_COMMAND_RESPONSE((byte) 0x88, XbeeAtCommandResponse.class, XbeeAtCommandResponseMessageParser.class),
     MODEM_STATUS((byte) 0x8A, XbeeModemStatusMessage.class, XbeeModemStatusMessageParser.class),
     EXPLICIT_RX((byte) 0x91, XbeeExplicitRxMessage.class, XbeeExplicitRxMessageMessageParser.class),
     NODE_DISCOVERY((byte) 0x95, XbeeNodeDiscovery.class, XbeeNodeDiscoveryMessageParser.class),

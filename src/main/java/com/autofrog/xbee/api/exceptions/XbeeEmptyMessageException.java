@@ -5,6 +5,7 @@ package com.autofrog.xbee.api.exceptions;
  */
 public class XbeeEmptyMessageException extends XbeeException {
     public XbeeEmptyMessageException() {
+        this("Empty message");
     }
 
     public XbeeEmptyMessageException(String message) {

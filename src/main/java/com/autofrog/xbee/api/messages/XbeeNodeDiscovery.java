@@ -27,6 +27,7 @@ public class XbeeNodeDiscovery extends XbeeMessageBase {
         POWER_CYCLE
     }
 
+
     private int networkAddress;
     private byte[] deviceId;
     private String deviceName;

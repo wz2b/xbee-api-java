@@ -22,7 +22,8 @@ public class XbeeUnknownMessage extends XbeeMessageBase {
     @Override
     public String toString() {
         return "XbeeUnknownMessage{" +
-                "data=" + XbeeUtilities.toHex(data) +
+                "frameType=" + String.format("0x%02x", rawFrameType) +
+                ", data=0x" + XbeeUtilities.toHex(data) +
                 '}';
     }
 }
