@@ -2,7 +2,7 @@ package com.autofrog.xbee.api.parsers;
 
 import com.autofrog.xbee.api.exceptions.XbeeException;
 import com.autofrog.xbee.api.messages.XbeeMessageBase;
-import com.autofrog.xbee.api.messages.XbeeModemStatus;
+import com.autofrog.xbee.api.messages.XbeeModemStatusEnum;
 import com.autofrog.xbee.api.messages.XbeeModemStatusMessage;
 
 import java.nio.ByteBuffer;
@@ -15,7 +15,7 @@ public class XbeeModemStatusMessageParser extends XbeeMessageParserBase {
     @Override
     protected XbeeMessageBase doParse(ByteBuffer buffer) throws XbeeException {
         byte code = buffer.get();
-        XbeeModemStatus status = XbeeModemStatus.lookup(code);
+        XbeeModemStatusEnum status = XbeeModemStatusEnum.lookup((int)(code & 0xFF));
         return new XbeeModemStatusMessage(status);
     }
 }

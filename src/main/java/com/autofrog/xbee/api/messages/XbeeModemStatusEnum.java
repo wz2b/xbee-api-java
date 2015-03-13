@@ -1,12 +1,13 @@
 package com.autofrog.xbee.api.messages;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Enumerated values of an XbeeModemStatusMessage
  */
-public enum XbeeModemStatus {
+public enum XbeeModemStatusEnum {
     HARDWARE_RESET(0),
     WATCHDOG_TIMER_RESET(1),
     JOINED_NETWORK(2),
@@ -18,16 +19,23 @@ public enum XbeeModemStatus {
     STACK_ERROR(0x80),
     UNKNOWN(-1);
 
-    XbeeModemStatus(int code) {
+
+    XbeeModemStatusEnum(int code) {
         this.code = code;
+        int asInt = (int) code;
+    }
+
+    private final static Map<Integer, XbeeModemStatusEnum> reverseTypeMap = new HashMap<Integer, XbeeModemStatusEnum>();
+    static {
+        for (XbeeModemStatusEnum that : EnumSet.allOf(XbeeModemStatusEnum.class))
+            reverseTypeMap.put((int) that.code, that);
     }
 
     /* The code is an int so we can use -1 as an unknown value */
     private final int code;
-    private final static Map<Integer, XbeeModemStatus> reverseTypeMap = new HashMap<Integer, XbeeModemStatus>();
 
-    public static XbeeModemStatus lookup(byte value) {
-        XbeeModemStatus status = reverseTypeMap.get(value);
+    public static XbeeModemStatusEnum lookup(int value) {
+        XbeeModemStatusEnum status = reverseTypeMap.get(value);
         if (status == null)
             status = UNKNOWN;
 

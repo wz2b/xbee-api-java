@@ -3,6 +3,7 @@ package com.autofrog.xbee.api.parsers;
 import com.autofrog.xbee.api.XbeeUtilities;
 import com.autofrog.xbee.api.exceptions.XbeeException;
 import com.autofrog.xbee.api.messages.XbeeMessageBase;
+import com.autofrog.xbee.api.messages.XbeeUnknownMessage;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
 import java.io.IOException;
@@ -43,9 +44,7 @@ public class XbeeRootParser {
         if(parser != null) {
             return parser.parse(bytes);
         } else {
-            System.err.println("Unknown message: " + XbeeUtilities.toHex(frameType) + " " + XbeeUtilities.toHex(bytes));
+            return new XbeeUnknownMessage(frameType, bytes);
         }
-
-        return null;
     }
 }

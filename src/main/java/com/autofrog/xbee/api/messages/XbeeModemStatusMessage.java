@@ -2,25 +2,20 @@ package com.autofrog.xbee.api.messages;
 
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * Created by chrisp on 012 3/12/2015.
+ * Modem status indication.  There is no address in this message, so it represents the
+ * status of the device that is directly connected (usually the coordinator)
  */
 public class XbeeModemStatusMessage extends XbeeMessageBase {
+    private final XbeeModemStatusEnum status;
 
-
-
-    private final XbeeModemStatus status;
-
-    public XbeeModemStatusMessage(XbeeModemStatus status) {
+    public XbeeModemStatusMessage(XbeeModemStatusEnum status) {
         super(XbeeMessageType.MODEM_STATUS.frameType);
         this.status = status;
     }
 
 
-    public XbeeModemStatus getStatus() {
+    public XbeeModemStatusEnum getStatus() {
         return status;
     }
 
