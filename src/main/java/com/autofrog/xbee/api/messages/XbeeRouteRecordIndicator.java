@@ -45,8 +45,23 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
         return isBroadcast;
     }
 
+    /**
+     * Get the route
+     *
+     * @return array of hops, excluding the source and destination.  Will be empty if
+     * the route is direct.
+     */
     public short[] getRoute() {
         return route;
+    }
+
+    /**
+     * Get the number of hops in this route
+     *
+     * @return number of addresses in the route, excluding the source and destination
+     */
+    public int getNumHops() {
+        return route.length;
     }
 
     public boolean isDirectToCoordinator() {
@@ -55,7 +70,7 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
 
     @Override
     public String toString() {
-        return new StringBuilder("XbeeRouteRecordIndicator{")
+        final StringBuilder sb = new StringBuilder("XbeeRouteRecordIndicator {")
                 .append("address=")
                 .append(String.format("0x%08X", address))
                 .append(", shortAddress=")
@@ -66,9 +81,29 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
                 .append(isBroadcast)
                 .append(", isDirect=")
                 .append(isDirectToCoordinator())
-                .append(", route=")
-                .append(Arrays.toString(route))
-                .append('}')
-                .toString();
+                .append(", route=");
+
+        if (route.length == 0) {
+            sb.append("direct");
+        } else {
+            boolean first = true;
+            for (short r : route) {
+                if (!first) {
+                    sb.append(",");
+                } else {
+                    first = false;
+                }
+
+                if(r == 0x0000) {
+                    sb.append(String.format("coordinator"));
+                } else {
+                    sb.append(String.format("0x%04X", r));
+                }
+            }
+        }
+
+        sb.append(" }");
+
+        return sb.toString();
     }
 }
