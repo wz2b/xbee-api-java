@@ -91,7 +91,10 @@ public class XbeeMessageParserTest extends EasyMockSupport {
         assertEquals((byte) 0xE0, (byte) result.getSourceEndpoint());
         assertEquals((byte) 0xE0, (byte) result.getDestEndpoint());
         assertEquals((short)0xC105, (short)result.getProfileId());
-        assertEquals((byte) 0x02, (byte) result.getRxOpts());
+        assertTrue(result.isBroadcast());
+        assertFalse(result.isAck());
+        assertFalse(result.isEncrypted());
+        assertFalse(result.isEndDevice());
         assertEquals(0x0013a20040522baaL, result.getSourceAddress());
     }
 

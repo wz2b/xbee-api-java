@@ -20,7 +20,10 @@ public class XbeeExplicitRxMessageMessageParser extends XbeeMessageParserBase {
         short clusterId = bb.getShort();
         short profileId = bb.getShort();
         byte rxOpts = bb.get();
-
+          boolean isAck = (rxOpts & 0x01) != 0;
+          boolean isBroadcast= (rxOpts & 0x02) != 0;;
+          boolean isEncrypted= (rxOpts & 0x20) != 0;;
+          boolean isEndDevice= (rxOpts & 0x40) != 0;;
         byte [] rawData = new byte[bb.remaining()];
         bb.get(rawData);
 
@@ -30,7 +33,10 @@ public class XbeeExplicitRxMessageMessageParser extends XbeeMessageParserBase {
                 destEndpoint,
                 profileId,
                 clusterId,
-                rxOpts,
+                isAck,
+                isBroadcast,
+                isEncrypted,
+                isEndDevice,
                 rawData);
 
     }

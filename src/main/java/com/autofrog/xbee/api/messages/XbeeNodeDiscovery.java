@@ -39,7 +39,7 @@ public class XbeeNodeDiscovery extends XbeeMessageBase {
     public XbeeNodeDiscovery(int networkAddress, byte[] deviceId, String deviceName,
                              int parentDeviceAddress, DeviceType deviceType, EventType event,
                              int profileId, int manufacturerId) {
-        super(XbeeMessageType.NODE_DISCOVERY.getFrameType(), null);
+        super(XbeeMessageType.NODE_DISCOVERY.frameType);
         this.networkAddress = networkAddress;
         this.deviceId = deviceId;
         this.deviceName = deviceName;
@@ -50,20 +50,17 @@ public class XbeeNodeDiscovery extends XbeeMessageBase {
         this.manufacturerId = manufacturerId;
     }
 
-
-
-
     @Override
     public String toString() {
         return "XbeeNodeDiscovery{" +
-                "networkAddress=" + String.format("%04X", networkAddress) +
-                ", deviceId=" + XbeeUtilities.toHex(deviceId) +
+                "networkAddress=" + String.format("0x%04X", networkAddress) +
+                ", deviceId=" + String.format("0x%04X", deviceId) +
                 ", deviceName='" + deviceName + '\'' +
-                ", parentDeviceAddress=" + String.format("%04X", parentDeviceAddress) +
+                ", parentDeviceAddress=" + String.format("0x%04X", parentDeviceAddress) +
                 ", deviceType=" + deviceType +
                 ", event=" + event +
-                ", profileId=" + String.format("%04X", profileId) +
-                ", manufacturerId=" + String.format("%04X", manufacturerId) +
+                ", profileId=" + String.format("0x%04X", profileId) +
+                ", manufacturerId=" + String.format("0x%04X", manufacturerId) +
                 '}';
     }
 }

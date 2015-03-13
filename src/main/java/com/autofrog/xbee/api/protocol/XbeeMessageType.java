@@ -1,11 +1,7 @@
 package com.autofrog.xbee.api.protocol;
 
-import com.autofrog.xbee.api.messages.XbeeExplicitRxMessage;
-import com.autofrog.xbee.api.messages.XbeeMessageBase;
-import com.autofrog.xbee.api.messages.XbeeNodeDiscovery;
-import com.autofrog.xbee.api.parsers.XbeeExplicitRxMessageMessageParser;
-import com.autofrog.xbee.api.parsers.XbeeNodeDiscoveryMessageParser;
-import com.autofrog.xbee.api.parsers.XbeeMessageParserBase;
+import com.autofrog.xbee.api.messages.*;
+import com.autofrog.xbee.api.parsers.*;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -18,12 +14,13 @@ import java.util.Map;
  *   requirements (so not right now)
  */
 public enum XbeeMessageType {
-    //    TRANSMIT((byte) 0x10),
+    MODEM_STATUS((byte) 0x8A, XbeeModemStatusMessage.class, XbeeModemStatusMessageParser.class),
     EXPLICIT_RX((byte) 0x91, XbeeExplicitRxMessage.class, XbeeExplicitRxMessageMessageParser.class),
-//    RX_IO_SAMPLE((byte) 0x92),
-    NODE_DISCOVERY((byte) 0x95, XbeeNodeDiscovery.class, XbeeNodeDiscoveryMessageParser.class);
+    NODE_DISCOVERY((byte) 0x95, XbeeNodeDiscovery.class, XbeeNodeDiscoveryMessageParser.class),
+    ROUTE_RECORD_INDICATOR((byte) 0xA1, XbeeRouteRecordIndicator.class, XbeeRouteRecordIndicatorParser.class);
 
-    private final byte frameType;
+
+    public final byte frameType;
     private final Class<? extends XbeeMessageBase> messageClass;
     private final Class<? extends XbeeMessageParserBase> parser;
 
@@ -31,7 +28,7 @@ public enum XbeeMessageType {
 
     static {
         for (XbeeMessageType thisMessageType : EnumSet.allOf(XbeeMessageType.class))
-            reverseTypeMap.put(thisMessageType.getFrameType(), thisMessageType);
+            reverseTypeMap.put(thisMessageType.frameType, thisMessageType);
     }
 
     XbeeMessageType(byte value,
@@ -40,10 +37,6 @@ public enum XbeeMessageType {
         this.frameType = value;
         this.messageClass = messageType;
         this.parser = parser;
-    }
-
-    public byte getFrameType() {
-        return frameType;
     }
 
     public Class<? extends XbeeMessageParserBase> getParserClass() {

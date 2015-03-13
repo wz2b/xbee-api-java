@@ -23,7 +23,7 @@ public class XbeeUtilities {
     }
 
 
-    public static String toHex(byte[] arr) {
+    public static String toHex(byte ... arr) {
         StringBuffer buf = new StringBuffer(arr.length >> 1);
 
         for (byte b : arr) {

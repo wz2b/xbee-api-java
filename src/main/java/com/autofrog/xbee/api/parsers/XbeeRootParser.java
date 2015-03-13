@@ -1,5 +1,6 @@
 package com.autofrog.xbee.api.parsers;
 
+import com.autofrog.xbee.api.XbeeUtilities;
 import com.autofrog.xbee.api.exceptions.XbeeException;
 import com.autofrog.xbee.api.messages.XbeeMessageBase;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
@@ -23,7 +24,7 @@ public class XbeeRootParser {
             XbeeMessageParserBase parser = null;
             try {
                 parser = msgType.getParserClass().newInstance();
-                parsers.put(msgType.getFrameType(), parser);
+                parsers.put(msgType.frameType, parser);
             } catch (InstantiationException e) {
                 throw new XbeeException("Unable to instantiate parser for frame type "
                         + msgType.name()
@@ -41,6 +42,8 @@ public class XbeeRootParser {
         XbeeMessageParserBase parser = parsers.get(frameType);
         if(parser != null) {
             return parser.parse(bytes);
+        } else {
+            System.err.println("Unknown message: " + XbeeUtilities.toHex(frameType) + " " + XbeeUtilities.toHex(bytes));
         }
 
         return null;
