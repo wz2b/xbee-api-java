@@ -191,10 +191,6 @@ public class XbeeMessageParser {
                 }
             }
         }
-
-        for(XbeeMessageListener allListener : allFrameTypesListeners) {
-            allListener.onXbeeMessage(this, msg);
-        }
     }
 
     public void byteIn(byte b) {
@@ -326,7 +322,7 @@ public class XbeeMessageParser {
                     sender.send(command);
                 }
             }
-        }, 0, 10, TimeUnit.SECONDS);
+        }, 0, 5, TimeUnit.MINUTES);
     }
 
     public void stop() throws InterruptedException {
