@@ -5,36 +5,60 @@ import com.autofrog.xbee.api.protocol.XbeeMessageType;
 import java.util.Arrays;
 
 /**
- * Created by chrisp on 012 3/12/2015.
+ * <pre>
+ * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Lesser General Public License
+ * (LGPL) version 2.1 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/lgpl-2.1.html
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ * </pre>
  */
 public class XbeeRouteRecordIndicator extends XbeeMessageBase {
 
-    private final long address;
-    private final short shortAddress;
+    private final byte[] deviceId;
+    private final int address;
     private final boolean isAck;
     private final boolean isBroadcast;
-    private final short[] route;
+    private final int[] route;
 
 
-    public XbeeRouteRecordIndicator(long address,
-                                    short shortAddress,
+    public XbeeRouteRecordIndicator(byte[] deviceId,
+                                    int address,
                                     boolean isAck,
                                     boolean isBroadcast,
-                                    short[] route) {
+                                    int[] route) {
         super(XbeeMessageType.ROUTE_RECORD_INDICATOR.frameType);
+        this.deviceId = deviceId;
         this.address = address;
-        this.shortAddress = shortAddress;
         this.isAck = isAck;
         this.isBroadcast = isBroadcast;
         this.route = route;
     }
 
-    public long getAddress() {
-        return address;
+    /**
+     * 64-bit address of the device
+     * @return
+     */
+    public byte[] getDeviceId() {
+        return deviceId;
     }
 
-    public short getShortAddress() {
-        return shortAddress;
+    /**
+     * Get the network (16 bit) address of the device.
+     * @note The 16 bit address is not static.  It can change under certain conditions,
+     * such as an address conflict or when a device leaves then re-joins the network.
+     * To properly identify a device use its full deviceId.
+     *
+     * @return
+     */
+    public int getAddress() {
+        return address;
     }
 
     public boolean isAck() {
@@ -46,12 +70,18 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
     }
 
     /**
-     * Get the route
+     * Get the route.
+     *
+     * @note The route is a list of 16 bit network address of devices.  As with other messages,
+     * this address is not static.  It can change under certain conditions,
+     * such as an address conflict or when a device leaves then re-joins the network.
+     * To properly identify a device use its full deviceId.
+     *
      *
      * @return array of hops, excluding the source and destination.  Will be empty if
      * the route is direct.
      */
-    public short[] getRoute() {
+    public int[] getRoute() {
         return route;
     }
 
@@ -74,7 +104,7 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
                 .append("address=")
                 .append(String.format("0x%08X", address))
                 .append(", shortAddress=")
-                .append(String.format("0x%04X", shortAddress))
+                .append(String.format("0x%04X", address))
                 .append(", isAck=")
                 .append(isAck)
                 .append(", isBroadcast=")
@@ -87,7 +117,7 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
             sb.append("direct");
         } else {
             boolean first = true;
-            for (short r : route) {
+            for (int r : route) {
                 if (!first) {
                     sb.append(",");
                 } else {

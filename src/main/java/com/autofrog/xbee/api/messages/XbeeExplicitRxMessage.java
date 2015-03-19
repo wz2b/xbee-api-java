@@ -1,15 +1,27 @@
 package com.autofrog.xbee.api.messages;
 
-import com.autofrog.xbee.api.XbeeUtilities;
+import com.autofrog.xbee.api.util.XbeeUtilities;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
 /**
- * Created by chrisp on 009 3/9/2015.
+ * <pre>
+ * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Lesser General Public License
+ * (LGPL) version 2.1 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/lgpl-2.1.html
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ * </pre>
  */
 public class XbeeExplicitRxMessage extends XbeeMessageBase {
 
-    private final long sourceAddress;
-    private final short sourceNetworkAddress;
+    private final byte[] deviceId;
+    private final int address;
     private final byte sourceEndpoint;
     private final byte destEndpoint;
     private final short profileId;
@@ -20,7 +32,7 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
     private final boolean isEndDevice;
     private final byte[] payload;
 
-    public XbeeExplicitRxMessage(long sourceAddress,
+    public XbeeExplicitRxMessage(byte[]  deviceId,
                                  short sourceNetworkAddress,
                                  byte sourceEndpoint,
                                  byte destEndpoint,
@@ -32,8 +44,8 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
                                  boolean isEndDevice,
                                  byte[] payload) {
         super(XbeeMessageType.EXPLICIT_RX.frameType);
-        this.sourceAddress = sourceAddress;
-        this.sourceNetworkAddress = sourceNetworkAddress;
+        this.deviceId = deviceId;
+        this.address = sourceNetworkAddress;
         this.sourceEndpoint = sourceEndpoint;
         this.destEndpoint = destEndpoint;
         this.profileId = profileId;
@@ -43,6 +55,22 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
         this.isEncrypted = isEncrypted;
         this.isEndDevice = isEndDevice;
         this.payload = payload;
+    }
+
+    public XbeeExplicitRxMessage(XbeeExplicitRxMessage orig,
+                                 byte[]  deviceId) {
+        super(XbeeMessageType.EXPLICIT_RX.frameType);
+        this.deviceId = deviceId;
+        this.address = orig.address;
+        this.sourceEndpoint = orig.sourceEndpoint;
+        this.destEndpoint = orig.destEndpoint;
+        this.profileId = orig.profileId;
+        this.clusterId = orig.clusterId;
+        this.isAck = orig.isAck;
+        this.isBroadcast = orig.isBroadcast;
+        this.isEncrypted = orig.isEncrypted;
+        this.isEndDevice = orig.isEndDevice;
+        this.payload = orig.payload;
     }
 
     public short getClusterId() {
@@ -73,16 +101,24 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
         return isEndDevice;
     }
 
-    public long getSourceAddress() {
-        return sourceAddress;
+    public byte[]  getDeviceId() {
+        return deviceId;
     }
 
     public byte getSourceEndpoint() {
         return sourceEndpoint;
     }
 
-    public short getSourceNetworkAddress() {
-        return sourceNetworkAddress;
+    /**
+     * Get the network (16 bit) address of the device.
+     * @note The 16 bit address is not static.  It can change under certain conditions,
+     * such as an address conflict or when a device leaves then re-joins the network.
+     * To properly identify a device use its full deviceId.
+     *
+     * @return
+     */
+    public int getAddress() {
+        return address;
     }
 
     public byte[] getPayload() {
@@ -92,8 +128,8 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("XbeeExplicitRxMessage { "
-        ).append(String.format("sourceAddress=0x%016X", sourceAddress))
-                .append(String.format(", sourceNeworkAddress=0x%04X", sourceNetworkAddress))
+        ).append(String.format("deviceId=0x%s", XbeeUtilities.toHex(deviceId)))
+                .append(String.format(", sourceNeworkAddress=0x%04X", address))
                 .append(String.format(", sourceEndpoint=0x%02X", sourceEndpoint))
                 .append(String.format(", destEndpoint=0x%02X", destEndpoint))
                 .append(String.format(", profileId=0x%04X", profileId))

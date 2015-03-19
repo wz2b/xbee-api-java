@@ -9,25 +9,41 @@ import java.util.ArrayList;
 import java.util.List;
 
  /**
- * Created by chrisp on 012 3/12/2015.
- */
+  *
+  * <pre>
+  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
+  *
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the GNU Lesser General Public License
+  * (LGPL) version 2.1 which accompanies this distribution, and is available at
+  * http://www.gnu.org/licenses/lgpl-2.1.html
+  *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  * Lesser General Public License for more details.
+  * </pre>
+  */
 public class XbeeRouteRecordIndicatorParser extends XbeeMessageParserBase {
 
 
     @Override
     protected XbeeMessageBase doParse(ByteBuffer buffer) throws XbeeException {
-        long address = buffer.getLong();
-        short shortAddress = buffer.getShort();
+
+        byte [] deviceId = new byte[8];
+        buffer.get(deviceId);
+        int shortAddress = (int) (buffer.getShort() & 0xFFFF);
         byte rxOpts = buffer.get();
         boolean isAck = (rxOpts & 0x01) != 0;
         boolean isBroadcast = (rxOpts & 0x02) != 0;
         byte numAddresses = buffer.get();
 
-        short [] route = new short[numAddresses];
+        int [] route = new int[numAddresses];
         for(int i=0; i < numAddresses; i++) {
-
+            int addr = (int) (buffer.getShort() & 0xFFFF);
+            route[i] = addr;
         }
 
-        return new XbeeRouteRecordIndicator(address, shortAddress, isAck, isBroadcast, route);
+        return new XbeeRouteRecordIndicator(deviceId, shortAddress, isAck, isBroadcast, route);
     }
 }

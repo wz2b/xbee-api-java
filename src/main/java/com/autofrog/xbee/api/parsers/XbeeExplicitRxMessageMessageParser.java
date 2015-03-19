@@ -5,14 +5,27 @@ import com.autofrog.xbee.api.messages.XbeeExplicitRxMessage;
 import java.nio.ByteBuffer;
 
 /**
- * Created by chrisp on 012 3/12/2015.
+ * <pre>
+ * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Lesser General Public License
+ * (LGPL) version 2.1 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/lgpl-2.1.html
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ * </pre>
  */
 public class XbeeExplicitRxMessageMessageParser extends XbeeMessageParserBase {
 
     @Override
     public XbeeExplicitRxMessage doParse(ByteBuffer bb) {
-        long sourceAddress = bb.getLong();
-        short sourceNetworkAddress = bb.getShort();
+        byte [] deviceId = new byte[8];
+        bb.get(deviceId);
+        short address = bb.getShort();
 
         byte sourceEndpoint = bb.get();
         byte destEndpoint = bb.get();
@@ -27,8 +40,8 @@ public class XbeeExplicitRxMessageMessageParser extends XbeeMessageParserBase {
         byte [] rawData = new byte[bb.remaining()];
         bb.get(rawData);
 
-        return new XbeeExplicitRxMessage(sourceAddress,
-                sourceNetworkAddress,
+        return new XbeeExplicitRxMessage(deviceId,
+                address,
                 sourceEndpoint,
                 destEndpoint,
                 profileId,
