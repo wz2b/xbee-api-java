@@ -1,6 +1,8 @@
 package com.autofrog.xbee.api.parsers;
 
+import com.autofrog.xbee.api.cache.XbeeNodeCache;
 import com.autofrog.xbee.api.exceptions.XbeeException;
+import com.autofrog.xbee.api.messages.XbeeAddressableMessage;
 import com.autofrog.xbee.api.messages.XbeeMessageBase;
 import com.autofrog.xbee.api.messages.XbeeUnknownMessage;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
@@ -11,7 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *
@@ -28,8 +29,10 @@ import java.util.Map;
 public class XbeeRootParser {
 
     private final Map<Byte, XbeeMessageParserBase> parsers;
+    private final XbeeNodeCache cache;
 
     public XbeeRootParser() throws XbeeException {
+        cache = new XbeeNodeCache();
         parsers = new HashMap<Byte, XbeeMessageParserBase>();
 
         for (XbeeMessageType msgType : EnumSet.allOf(XbeeMessageType.class)) {
@@ -52,8 +55,14 @@ public class XbeeRootParser {
     public final XbeeMessageBase parse(byte frameType, byte[] bytes) throws XbeeException, IOException {
 
         XbeeMessageParserBase parser = parsers.get(frameType);
-        if(parser != null) {
-            return parser.parse(bytes);
+
+        if (parser != null) {
+            XbeeMessageBase message = parser.parse(bytes);
+
+            if (XbeeAddressableMessage.class.isAssignableFrom(message.getClass())) {
+                message = cache.filter((XbeeAddressableMessage) message);
+            }
+            return message;
         } else {
             return new XbeeUnknownMessage(frameType, bytes);
         }

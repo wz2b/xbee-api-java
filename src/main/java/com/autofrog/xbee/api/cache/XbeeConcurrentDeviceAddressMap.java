@@ -56,7 +56,7 @@ public class XbeeConcurrentDeviceAddressMap {
      *
      * @return copy of this table
      */
-    public synchronized Map<Integer, byte[]> getMap() {
+    public synchronized Map<Integer, byte[]> copyMap() {
         Map<Integer, byte[]> temp = new HashMap<Integer, byte[]>();
         for(int key : forward.keySet()) {
             temp.put(key, forward.get(key));
@@ -73,7 +73,7 @@ public class XbeeConcurrentDeviceAddressMap {
      *  value is different than the new address being provided this is an indication
      *  that the address has changed.
      */
-    public synchronized int replace(byte[] deviceId, int newAddress) {
+    public synchronized Integer replace(byte[] deviceId, int newAddress) {
         Integer oldAddress = null;
 
         if (deviceId != null) {
@@ -90,8 +90,15 @@ public class XbeeConcurrentDeviceAddressMap {
             }
 
             if(oldAddress == null) {
+                /*
+                 * There wasn't an old record, so just put the new one
+                 */
                 reverse.put(deviceId, newAddress);
             } else if(oldAddress != newAddress) {
+                /*
+                 * There was an old record - remove it
+                 */
+                reverse.remove(oldAddress);
                 reverse.put(deviceId, newAddress);
             } else {
                 /* Do nothing - they are the same. */

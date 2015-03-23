@@ -19,10 +19,8 @@ import java.util.Arrays;
  * Lesser General Public License for more details.
  * </pre>
  */
-public class XbeeRouteRecordIndicator extends XbeeMessageBase {
+public class XbeeRouteRecordIndicator extends XbeeAddressableMessage {
 
-    private final byte[] deviceId;
-    private final int address;
     private final boolean isAck;
     private final boolean isBroadcast;
     private final int[] route;
@@ -33,32 +31,10 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
                                     boolean isAck,
                                     boolean isBroadcast,
                                     int[] route) {
-        super(XbeeMessageType.ROUTE_RECORD_INDICATOR.frameType);
-        this.deviceId = deviceId;
-        this.address = address;
+        super(XbeeMessageType.ROUTE_RECORD_INDICATOR.frameType, deviceId, address);
         this.isAck = isAck;
         this.isBroadcast = isBroadcast;
         this.route = route;
-    }
-
-    /**
-     * 64-bit address of the device
-     * @return
-     */
-    public byte[] getDeviceId() {
-        return deviceId;
-    }
-
-    /**
-     * Get the network (16 bit) address of the device.
-     * @note The 16 bit address is not static.  It can change under certain conditions,
-     * such as an address conflict or when a device leaves then re-joins the network.
-     * To properly identify a device use its full deviceId.
-     *
-     * @return
-     */
-    public int getAddress() {
-        return address;
     }
 
     public boolean isAck() {
@@ -72,14 +48,12 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
     /**
      * Get the route.
      *
+     * @return array of hops, excluding the source and destination.  Will be empty if
+     * the route is direct.
      * @note The route is a list of 16 bit network address of devices.  As with other messages,
      * this address is not static.  It can change under certain conditions,
      * such as an address conflict or when a device leaves then re-joins the network.
      * To properly identify a device use its full deviceId.
-     *
-     *
-     * @return array of hops, excluding the source and destination.  Will be empty if
-     * the route is direct.
      */
     public int[] getRoute() {
         return route;
@@ -124,7 +98,7 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
                     first = false;
                 }
 
-                if(r == 0x0000) {
+                if (r == 0x0000) {
                     sb.append(String.format("coordinator"));
                 } else {
                     sb.append(String.format("0x%04X", r));
@@ -135,5 +109,16 @@ public class XbeeRouteRecordIndicator extends XbeeMessageBase {
         sb.append(" }");
 
         return sb.toString();
+    }
+
+    @Override
+    protected XbeeRouteRecordIndicator doCloneWithNewDeviceId(byte[] newDeviceId) {
+        return new XbeeRouteRecordIndicator(
+                newDeviceId,
+                this.address,
+                this.isAck,
+                this.isBroadcast,
+                this.route
+        );
     }
 }

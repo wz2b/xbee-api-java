@@ -18,10 +18,9 @@ import com.autofrog.xbee.api.protocol.XbeeMessageType;
  * Lesser General Public License for more details.
  * </pre>
  */
-public class XbeeExplicitRxMessage extends XbeeMessageBase {
+public class XbeeExplicitRxMessage extends XbeeAddressableMessage {
 
-    private final byte[] deviceId;
-    private final int address;
+
     private final byte sourceEndpoint;
     private final byte destEndpoint;
     private final short profileId;
@@ -32,8 +31,8 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
     private final boolean isEndDevice;
     private final byte[] payload;
 
-    public XbeeExplicitRxMessage(byte[]  deviceId,
-                                 short sourceNetworkAddress,
+    public XbeeExplicitRxMessage(byte[] deviceId,
+                                 int address,
                                  byte sourceEndpoint,
                                  byte destEndpoint,
                                  short profileId,
@@ -43,9 +42,7 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
                                  boolean isEncrypted,
                                  boolean isEndDevice,
                                  byte[] payload) {
-        super(XbeeMessageType.EXPLICIT_RX.frameType);
-        this.deviceId = deviceId;
-        this.address = sourceNetworkAddress;
+        super(XbeeMessageType.EXPLICIT_RX.frameType, deviceId, address);
         this.sourceEndpoint = sourceEndpoint;
         this.destEndpoint = destEndpoint;
         this.profileId = profileId;
@@ -58,10 +55,8 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
     }
 
     public XbeeExplicitRxMessage(XbeeExplicitRxMessage orig,
-                                 byte[]  deviceId) {
-        super(XbeeMessageType.EXPLICIT_RX.frameType);
-        this.deviceId = deviceId;
-        this.address = orig.address;
+                                 byte[] deviceId) {
+        super(XbeeMessageType.EXPLICIT_RX.frameType, deviceId, orig.address);
         this.sourceEndpoint = orig.sourceEndpoint;
         this.destEndpoint = orig.destEndpoint;
         this.profileId = orig.profileId;
@@ -101,24 +96,26 @@ public class XbeeExplicitRxMessage extends XbeeMessageBase {
         return isEndDevice;
     }
 
-    public byte[]  getDeviceId() {
-        return deviceId;
-    }
 
     public byte getSourceEndpoint() {
         return sourceEndpoint;
     }
 
-    /**
-     * Get the network (16 bit) address of the device.
-     * @note The 16 bit address is not static.  It can change under certain conditions,
-     * such as an address conflict or when a device leaves then re-joins the network.
-     * To properly identify a device use its full deviceId.
-     *
-     * @return
-     */
-    public int getAddress() {
-        return address;
+
+    @Override
+    protected XbeeExplicitRxMessage doCloneWithNewDeviceId(byte [] newDeviceId) {
+        return new XbeeExplicitRxMessage(
+                newDeviceId,
+                this.address,
+                this.sourceEndpoint,
+                this.destEndpoint,
+                this.profileId,
+                this.clusterId,
+                this.isAck,
+                this.isBroadcast,
+                this.isEncrypted,
+                this.isEndDevice,
+                this.payload);
     }
 
     public byte[] getPayload() {

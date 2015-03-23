@@ -4,7 +4,7 @@ import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
 /**
  * Message recei=ved when a node joins the network, or possibly when one is queried
- *
+ * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *
@@ -19,7 +19,7 @@ import com.autofrog.xbee.api.protocol.XbeeMessageType;
  * Lesser General Public License for more details.
  * </pre>
  */
-public class XbeeNodeDiscovery extends XbeeMessageBase {
+public class XbeeNodeDiscovery extends XbeeAddressableMessage {
 
     /**
      * Types of devices that can send node discovery messages
@@ -41,8 +41,6 @@ public class XbeeNodeDiscovery extends XbeeMessageBase {
     }
 
 
-    private int address;
-    private byte[] deviceId;
     private String deviceName;
     private int parentDeviceAddress;
     private DeviceType deviceType;
@@ -50,12 +48,10 @@ public class XbeeNodeDiscovery extends XbeeMessageBase {
     private int profileId;
     private int manufacturerId;
 
-    public XbeeNodeDiscovery(int networkAddress, byte[] deviceId, String deviceName,
+    public XbeeNodeDiscovery(int address, byte[] deviceId, String deviceName,
                              int parentDeviceAddress, DeviceType deviceType, EventType event,
                              int profileId, int manufacturerId) {
-        super(XbeeMessageType.NODE_DISCOVERY.frameType);
-        this.address = networkAddress;
-        this.deviceId = deviceId;
+        super(XbeeMessageType.NODE_DISCOVERY.frameType, deviceId, address);
         this.deviceName = deviceName;
         this.parentDeviceAddress = parentDeviceAddress;
         this.deviceType = deviceType;
@@ -64,26 +60,17 @@ public class XbeeNodeDiscovery extends XbeeMessageBase {
         this.manufacturerId = manufacturerId;
     }
 
-
-    public int getAddress() {
-        return address;
-    }
-
-    public byte[] getDeviceId() {
-        return deviceId;
-    }
-
     public String getDeviceName() {
         return deviceName;
     }
 
     /**
      * Get the network (16 bit) address of the parent.
+     *
+     * @return
      * @note The 16 bit address is not static.  It can change under certain conditions,
      * such as an address conflict or when a device leaves then re-joins the network.
      * To properly identify a device use its full deviceId.
-     *
-     * @return
      */
     public int getParentDeviceAddress() {
         return parentDeviceAddress;
@@ -103,6 +90,18 @@ public class XbeeNodeDiscovery extends XbeeMessageBase {
 
     public int getManufacturerId() {
         return manufacturerId;
+    }
+
+    @Override
+    protected XbeeAddressableMessage doCloneWithNewDeviceId(byte[] newDeviceId) {
+        return new XbeeNodeDiscovery(address,
+                newDeviceId,
+                this.deviceName,
+                this.parentDeviceAddress,
+                this.deviceType,
+                this.event,
+                this.profileId,
+                this.manufacturerId);
     }
 
     @Override

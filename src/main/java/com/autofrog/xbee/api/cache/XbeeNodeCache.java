@@ -1,28 +1,33 @@
 package com.autofrog.xbee.api.cache;
 
 import com.autofrog.xbee.api.listeners.XbeeMessageListener;
+import com.autofrog.xbee.api.messages.XbeeAddressableMessage;
 import com.autofrog.xbee.api.messages.XbeeExplicitRxMessage;
 import com.autofrog.xbee.api.messages.XbeeNodeDiscovery;
 import com.autofrog.xbee.api.messages.XbeeRouteRecordIndicator;
+import com.autofrog.xbee.api.protocol.XbeeApiConstants;
+import com.autofrog.xbee.api.util.XbeeLogListener;
+import com.autofrog.xbee.api.util.XbeeLogger;
+import com.autofrog.xbee.api.util.XbeeUtilities;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A cache of doscpvered device information.
- *
+ * A cache of discovered device information.
+ * <p/>
  * The purpose if this cache is to be able to collect short to long addresses,
  * routes, and other node information.
- *
+ * <p/>
  * The Xbee modules (including the coordinator) add device IDs to messages when
  * possible, but because of memory limitations they cannot do it reliably on very
  * large networks.
- *
+ * <p/>
  * Part of he challenge is that the 16 bit address of a device can change under certain
  * conditions.  This includes address conflicts or if a device leaves and rejoins the
  * network.  Since the 16 bit address is not static, it is not a reliable way to identify
  * a device.
- *
+ * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *
@@ -60,35 +65,65 @@ public class XbeeNodeCache {
     private final Set<Short> unknownAddresses = Collections.synchronizedSet(new HashSet<Short>());
 
 
-    /**
-     * Listener of node discovery packets
-     */
-    private final XbeeMessageListener<XbeeNodeDiscovery> discoveryListener = new XbeeMessageListener<XbeeNodeDiscovery>() {
-        @Override
-        public void onXbeeMessage(Object sender, XbeeNodeDiscovery msg) {
-            /* TODO: figure out if the device ID could be invalid in a node discovery packet */
-            addressMap.replace(msg.getDeviceId(), msg.getAddress());
+    private final static XbeeLogger log = XbeeLogger.getLogger(XbeeNodeCache.class);
 
-            discoveries.put(msg.getAddress(), msg);
-        }
-    };
+    public XbeeAddressableMessage filter(XbeeAddressableMessage input) {
 
-    /**
-     * Listener of route indication messages
-     */
-    private final XbeeMessageListener<XbeeRouteRecordIndicator> routeListener = new XbeeMessageListener<XbeeRouteRecordIndicator>() {
-        @Override
-        public void onXbeeMessage(Object sender, XbeeRouteRecordIndicator route) {
-            /* TODO: figure out if the device id can be invalid in a route record indicator.
-             * For example, could it be a null address like 0x0000000000000000 or 0xFFFFFFFFFFFFFFFF
-             * or a broadcast address like 0x000000000000FFFF?
+        final int address = input.getAddress();
+        final byte[] deviceId = input.getDeviceId();
+
+        final boolean device_id_is_unknown = (Arrays.equals(XbeeApiConstants.UNKNOWN_DEVICE_ID, deviceId));
+        final boolean device_id_is_known = !device_id_is_unknown;
+        final boolean device_id_is_broadcast = (Arrays.equals(XbeeApiConstants.BROADCAST_DEVICE_ID, deviceId));
+
+        final boolean network_address_is_known = (address != XbeeApiConstants.UNKNOWN_ADDR);
+        final boolean network_address_is_broadcast = (address == XbeeApiConstants.BROADCAST_ADDR);
+
+        final boolean is_broadcast = network_address_is_broadcast || device_id_is_broadcast;
+        final boolean is_resolved = device_id_is_known && network_address_is_known;
+        /**
+         * Do not modify broadcasts.
+         */
+        if (is_broadcast) {
+            log.log(XbeeLogListener.Level.TRACE, "this is a broadcast", null);
+            return input;
+        } else if (is_resolved) {
+            addressMap.replace(deviceId, address);
+
+            if (input instanceof XbeeRouteRecordIndicator) {
+                XbeeRouteRecordIndicator route = (XbeeRouteRecordIndicator) input;
+                log.log(XbeeLogListener.Level.DEBUG, "Adding " + route, null);
+                routes.put(route.getAddress(), route);
+            }
+
+            if (input instanceof XbeeNodeDiscovery) {
+                XbeeNodeDiscovery discovery = (XbeeNodeDiscovery) input;
+                log.log(XbeeLogListener.Level.DEBUG, "Adding " + discovery, null);
+                discoveries.put(input.getAddress(), discovery);
+            }
+
+            /*
+             * Since this packet came in fully resolved there's nothing else to do
+             * to it.
              */
-            addressMap.replace(route.getDeviceId(), route.getAddress());
-
-            /* TODO: this is NOT safe - the network (short) address can change */
-            routes.put(route.getAddress(), route);
+            return input;
+        } else {
+            /*
+             * This packet did NOT come in fully resolved.
+             */
+            byte[] newDeviceId = addressMap.get(address);
+            if (newDeviceId != null) {
+                log.log(XbeeLogListener.Level.TRACE, "Replacing device id", null);
+                return input.cloneWithNewDeviceId(newDeviceId);
+            } else {
+                /*
+                 * We could not find it - nothing to do but return the original message
+                 */
+                log.log(XbeeLogListener.Level.TRACE, "Doing nothing", null);
+                return input;
+            }
         }
-    };
+    }
 
     /**
      * Listener of route indication messages
@@ -98,7 +133,7 @@ public class XbeeNodeCache {
         public void onXbeeMessage(Object sender, XbeeExplicitRxMessage msg) {
 
             /* TODO: update the address map if the device id has changed */
-            if(msg.getDeviceId() != null) {
+            if (msg.getDeviceId() != null) {
                 addressMap.replace(msg.getDeviceId(), msg.getAddress());
             }
         }
@@ -108,5 +143,6 @@ public class XbeeNodeCache {
     public XbeeNodeDiscovery get(int networkAddress) {
         return discoveries.get(networkAddress);
     }
+
 
 }

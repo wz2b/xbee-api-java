@@ -300,7 +300,6 @@ public class XbeeMessageParser {
                             } catch (Exception e) {
                                 /* Notify of some kind of parsing error */
                                 notifyListenersOfException(new XbeeException());
-
                                 return null;
                             } finally {
                                 rxState = RxState.WAITING_FOR_FLAG;

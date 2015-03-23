@@ -1,7 +1,6 @@
 package com.autofrog.xbee.api.protocol;
 
 /**
- *
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *
@@ -46,11 +45,34 @@ public class XbeeApiConstants {
     /**
      * Broadcast address - for sending to all nodes.
      */
-    public final static long ADDR_BROADCAST = 0xFFFF;
+    public final static int BROADCAST_ADDR = 0xFFFF;
 
+    /**
+     * Network address for unknown
+     */
+    public final static int UNKNOWN_ADDR = 0x0000;
+
+
+    /**
+     * Device ID used for broadcasts
+     */
+    public static final byte[] BROADCAST_DEVICE_ID = new byte[]{
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, (byte) 0xFF, (byte) 0xFF
+    };
+
+    /**
+     * Device ID for unknown messages
+     */
+    public static final byte[] UNKNOWN_DEVICE_ID = new byte[]{
+            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF
+    };
 
     /**
      * Digi's default profile id, used for many of their messages
      */
     public static final short DIGI_PROFILE_ID = (short) (0xC105);
+
 }
