@@ -1,9 +1,8 @@
 package com.autofrog.xbee.api.parsers;
 
 import com.autofrog.xbee.api.exceptions.XbeeException;
-import com.autofrog.xbee.api.messages.XbeeAtCommandResponse;
+import com.autofrog.xbee.api.messages_AT.XbeeAtCommandResponse;
 import com.autofrog.xbee.api.messages.XbeeMessageBase;
-import com.autofrog.xbee.api.messages.XbeeRouteRecordIndicator;
 import com.autofrog.xbee.api.messages_AT.XbeeAtCommandResponse_ND;
 
 import java.nio.ByteBuffer;

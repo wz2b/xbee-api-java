@@ -2,9 +2,8 @@ package com.autofrog.xbee.api.parsers;
 
 import com.autofrog.xbee.api.cache.XbeeNodeCache;
 import com.autofrog.xbee.api.exceptions.XbeeException;
-import com.autofrog.xbee.api.messages.XbeeAddressableMessage;
-import com.autofrog.xbee.api.messages.XbeeMessageBase;
-import com.autofrog.xbee.api.messages.XbeeUnknownMessage;
+import com.autofrog.xbee.api.messages.*;
+import com.autofrog.xbee.api.messages_AT.XbeeAtCommandResponse_ND;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
 import java.io.IOException;
@@ -56,15 +55,28 @@ public class XbeeRootParser {
 
         XbeeMessageParserBase parser = parsers.get(frameType);
 
-        if (parser != null) {
-            XbeeMessageBase message = parser.parse(bytes);
 
+        if (parser != null) {
+
+
+            XbeeMessageBase message = parser.parse(bytes);
+            System.out.println("Received a message type " + message.getClass().getCanonicalName());
             if (XbeeAddressableMessage.class.isAssignableFrom(message.getClass())) {
                 message = cache.filter((XbeeAddressableMessage) message);
+            } else if (message instanceof XbeeNodeDiscovery) {
+                XbeeNodeDiscovery nd = (XbeeNodeDiscovery) message ;
+                cache.filter(nd);
+            } else if(message instanceof XbeeAtCommandResponse_ND) {
+                cache.filter((XbeeAtCommandResponse_ND) message);
             }
+
             return message;
         } else {
             return new XbeeUnknownMessage(frameType, bytes);
         }
+    }
+
+    public XbeeNodeCache getCache() {
+        return cache;
     }
 }

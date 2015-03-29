@@ -1,6 +1,7 @@
 package com.autofrog.xbee.api.parsers;
 
 import com.autofrog.xbee.api.messages.XbeeExplicitRxMessage;
+import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 
 import java.nio.ByteBuffer;
 
@@ -23,8 +24,8 @@ public class XbeeExplicitRxMessageMessageParser extends XbeeMessageParserBase {
 
     @Override
     public XbeeExplicitRxMessage doParse(ByteBuffer bb) {
-        byte [] deviceId = new byte[8];
-        bb.get(deviceId);
+        byte [] deviceIdBuffer = new byte[8];
+        bb.get(deviceIdBuffer);
         short address = bb.getShort();
 
         byte sourceEndpoint = bb.get();
@@ -40,7 +41,7 @@ public class XbeeExplicitRxMessageMessageParser extends XbeeMessageParserBase {
         byte [] rawData = new byte[bb.remaining()];
         bb.get(rawData);
 
-        return new XbeeExplicitRxMessage(deviceId,
+        return new XbeeExplicitRxMessage(new XbeeDeviceId(deviceIdBuffer),
                 address,
                 sourceEndpoint,
                 destEndpoint,

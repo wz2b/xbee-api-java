@@ -1,5 +1,6 @@
 package com.autofrog.xbee.api.messages;
 
+import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
 import java.util.Arrays;
@@ -26,7 +27,7 @@ public class XbeeRouteRecordIndicator extends XbeeAddressableMessage {
     private final int[] route;
 
 
-    public XbeeRouteRecordIndicator(byte[] deviceId,
+    public XbeeRouteRecordIndicator(XbeeDeviceId deviceId,
                                     int address,
                                     boolean isAck,
                                     boolean isBroadcast,
@@ -112,7 +113,7 @@ public class XbeeRouteRecordIndicator extends XbeeAddressableMessage {
     }
 
     @Override
-    protected XbeeRouteRecordIndicator doCloneWithNewDeviceId(byte[] newDeviceId) {
+    protected XbeeRouteRecordIndicator doCloneWithNewDeviceId(XbeeDeviceId newDeviceId) {
         return new XbeeRouteRecordIndicator(
                 newDeviceId,
                 this.address,

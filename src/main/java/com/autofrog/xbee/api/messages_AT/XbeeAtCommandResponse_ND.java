@@ -1,7 +1,7 @@
 package com.autofrog.xbee.api.messages_AT;
 
+import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 import com.autofrog.xbee.api.util.XbeeUtilities;
-import com.autofrog.xbee.api.messages.XbeeAtCommandResponse;
 
 import java.util.Arrays;
 
@@ -44,12 +44,12 @@ public class XbeeAtCommandResponse_ND extends XbeeAtCommandResponse {
         len_NI = i - START_NI;
     }
 
-    public byte[] getShortAddress() {
+    public byte[] getAddress() {
         return Arrays.copyOfRange(data, START_MY, START_ADDRESS);
     }
 
-    public byte[] getAddress() {
-        return Arrays.copyOfRange(data, START_ADDRESS, START_NI);
+    public XbeeDeviceId getDeviceId() {
+        return new XbeeDeviceId(Arrays.copyOfRange(data, START_ADDRESS, START_NI));
     }
 
     public String getName() {
@@ -110,11 +110,11 @@ public class XbeeAtCommandResponse_ND extends XbeeAtCommandResponse {
         sb.append(", commandStatus=").append(getCommandStatus());
         sb.append(", statusCode=").append(statusCode);
         sb.append(", sequence=").append(sequence);
-        sb.append(", address=0x").append(XbeeUtilities.toHex(getAddress()));
+        sb.append(", address=0x").append(getDeviceId().toString());
         sb.append(", parent=0x").append(XbeeUtilities.toHex(getParentAddress()));
         sb.append(", deviceType=0x").append(XbeeUtilities.toHex(getDeviceType()));
         sb.append(", deviceStatus=0x").append(XbeeUtilities.toHex(getDeviceStatus()));
-        sb.append(", networkAddress=0x").append(XbeeUtilities.toHex(getShortAddress()));
+        sb.append(", networkAddress=0x").append(XbeeUtilities.toHex(getAddress()));
         sb.append(", name='").append(getName()).append('\'');
         sb.append(", profile=0x").append(XbeeUtilities.toHex(getProfileId()));
         sb.append(", mfgId=0x").append(XbeeUtilities.toHex(getMfgId()));

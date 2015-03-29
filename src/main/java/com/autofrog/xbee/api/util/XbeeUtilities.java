@@ -41,7 +41,6 @@ public class XbeeUtilities {
         return v;
     }
 
-
     public static String toHex(byte ... arr) {
         StringBuffer buf = new StringBuffer(arr.length >> 1);
 

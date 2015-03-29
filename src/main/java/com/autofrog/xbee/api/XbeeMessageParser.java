@@ -1,12 +1,12 @@
 package com.autofrog.xbee.api;
 
+import com.autofrog.xbee.api.cache.XbeeNodeCache;
 import com.autofrog.xbee.api.exceptions.XbeeChecksumException;
 import com.autofrog.xbee.api.exceptions.XbeeEmptyMessageException;
 import com.autofrog.xbee.api.exceptions.XbeeException;
 import com.autofrog.xbee.api.listeners.XbeeMessageListener;
 import com.autofrog.xbee.api.listeners.XbeeParsingExceptionListener;
 import com.autofrog.xbee.api.messages.XbeeMessageBase;
-import com.autofrog.xbee.api.messages.XbeeTransmitATCommand;
 import com.autofrog.xbee.api.parsers.XbeeRootParser;
 import com.autofrog.xbee.api.protocol.XbeeApiConstants;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
@@ -327,15 +327,15 @@ public class XbeeMessageParser {
 
 
     public void start() {
-        scheduler.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                XbeeTransmitATCommand command = new XbeeTransmitATCommand("ND");
-                if (sender != null) {
-                    sender.send(command);
-                }
-            }
-        }, 0, 5, TimeUnit.MINUTES);
+//        scheduler.scheduleWithFixedDelay(new Runnable() {
+//            @Override
+//            public void run() {
+//                XbeeTransmitATCommand command = new XbeeTransmitATCommand("ND");
+//                if (sender != null) {
+//                    sender.send(command);
+//                }
+//            }
+//        }, 0, 5, TimeUnit.MINUTES);
     }
 
     public void stop() throws InterruptedException {
@@ -349,5 +349,13 @@ public class XbeeMessageParser {
     public String dumpParserState() {
         return String.format("state=%s len=%d count=%d escaped=%s",
                 rxState, len, count, escaped);
+    }
+
+    public XbeeNodeCache getCache() {
+        return rootParser.getCache();
+    }
+
+    public XbeeTransmitter getSender() {
+        return sender;
     }
 }

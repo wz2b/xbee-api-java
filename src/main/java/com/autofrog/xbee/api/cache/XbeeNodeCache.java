@@ -1,11 +1,13 @@
 package com.autofrog.xbee.api.cache;
 
-import com.autofrog.xbee.api.listeners.XbeeMessageListener;
+
 import com.autofrog.xbee.api.messages.XbeeAddressableMessage;
-import com.autofrog.xbee.api.messages.XbeeExplicitRxMessage;
 import com.autofrog.xbee.api.messages.XbeeNodeDiscovery;
 import com.autofrog.xbee.api.messages.XbeeRouteRecordIndicator;
+import com.autofrog.xbee.api.messages_AT.XbeeAtCommandResponse;
+import com.autofrog.xbee.api.messages_AT.XbeeAtCommandResponse_ND;
 import com.autofrog.xbee.api.protocol.XbeeApiConstants;
+import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 import com.autofrog.xbee.api.util.XbeeLogListener;
 import com.autofrog.xbee.api.util.XbeeLogger;
 import com.autofrog.xbee.api.util.XbeeUtilities;
@@ -19,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * The purpose if this cache is to be able to collect short to long addresses,
  * routes, and other node information.
  * <p/>
- * The Xbee modules (including the coordinator) add device IDs to messages when
+ * The Xbee modules (including the coodinatorDeviceId) add device IDs to messages when
  * possible, but because of memory limitations they cannot do it reliably on very
  * large networks.
  * <p/>
@@ -43,106 +45,184 @@ import java.util.concurrent.ConcurrentHashMap;
  * </pre>
  */
 public class XbeeNodeCache {
-    /**
-     * Map of network (short) to device id (long) addresses
-     */
-    private final XbeeConcurrentDeviceAddressMap addressMap = new XbeeConcurrentDeviceAddressMap();
 
-    /**
-     * Map of network (short) address to their discovery information
-     */
-    private final Map<Integer, XbeeNodeDiscovery> discoveries = new ConcurrentHashMap<Integer, XbeeNodeDiscovery>();
+    private final ConcurrentHashMap<XbeeDeviceId, XbeeNodeInformation> infos;
+    private XbeeDeviceId coodinatorDeviceId = null;
 
-    /**
-     * Map of network (short) address to route
-     */
-    private final Map<Integer, XbeeRouteRecordIndicator> routes = new ConcurrentHashMap<Integer, XbeeRouteRecordIndicator>();
 
     /**
      * List of devices (by short address) that we don't know about.  This is a simply
      * synchornized set.
      */
-    private final Set<Short> unknownAddresses = Collections.synchronizedSet(new HashSet<Short>());
+    private final Set<Short> unknownAddresses;
 
-
+    /**
+     * Our logger
+     */
     private final static XbeeLogger log = XbeeLogger.getLogger(XbeeNodeCache.class);
+
+    public XbeeNodeCache() {
+        infos = new ConcurrentHashMap<XbeeDeviceId, XbeeNodeInformation>();
+        unknownAddresses = Collections.synchronizedSet(new HashSet<Short>());
+    }
+
 
     public XbeeAddressableMessage filter(XbeeAddressableMessage input) {
 
-        final int address = input.getAddress();
-        final byte[] deviceId = input.getDeviceId();
+        final int receivedAddress = input.getAddress();
+        final XbeeDeviceId receivedDeviceId = input.getDeviceId();
 
-        final boolean device_id_is_unknown = (Arrays.equals(XbeeApiConstants.UNKNOWN_DEVICE_ID, deviceId));
+        final boolean device_id_is_unknown = receivedDeviceId.isUnknown();
         final boolean device_id_is_known = !device_id_is_unknown;
-        final boolean device_id_is_broadcast = (Arrays.equals(XbeeApiConstants.BROADCAST_DEVICE_ID, deviceId));
+        final boolean device_id_is_broadcast = receivedDeviceId.isBroadcast();
 
-        final boolean network_address_is_known = (address != XbeeApiConstants.UNKNOWN_ADDR);
-        final boolean network_address_is_broadcast = (address == XbeeApiConstants.BROADCAST_ADDR);
+        final boolean network_address_is_known = (receivedAddress != XbeeApiConstants.UNKNOWN_ADDR);
+        final boolean network_address_is_broadcast = (receivedAddress == XbeeApiConstants.BROADCAST_ADDR);
 
         final boolean is_broadcast = network_address_is_broadcast || device_id_is_broadcast;
         final boolean is_resolved = device_id_is_known && network_address_is_known;
+
         /**
          * Do not modify broadcasts.
          */
         if (is_broadcast) {
             log.log(XbeeLogListener.Level.TRACE, "this is a broadcast", null);
             return input;
-        } else if (is_resolved) {
-            addressMap.replace(deviceId, address);
-
-            if (input instanceof XbeeRouteRecordIndicator) {
-                XbeeRouteRecordIndicator route = (XbeeRouteRecordIndicator) input;
-                log.log(XbeeLogListener.Level.DEBUG, "Adding " + route, null);
-                routes.put(route.getAddress(), route);
-            }
-
-            if (input instanceof XbeeNodeDiscovery) {
-                XbeeNodeDiscovery discovery = (XbeeNodeDiscovery) input;
-                log.log(XbeeLogListener.Level.DEBUG, "Adding " + discovery, null);
-                discoveries.put(input.getAddress(), discovery);
-            }
-
-            /*
-             * Since this packet came in fully resolved there's nothing else to do
-             * to it.
-             */
-            return input;
         } else {
-            /*
-             * This packet did NOT come in fully resolved.
-             */
-            byte[] newDeviceId = addressMap.get(address);
-            if (newDeviceId != null) {
-                log.log(XbeeLogListener.Level.TRACE, "Replacing device id", null);
-                return input.cloneWithNewDeviceId(newDeviceId);
+            if (is_resolved) {
+                /*
+                 * It's a route
+                 */
+                if (input instanceof XbeeRouteRecordIndicator) {
+                    XbeeRouteRecordIndicator route = (XbeeRouteRecordIndicator) input;
+                    updateRoute(route);
+                    log.log(XbeeLogListener.Level.DEBUG, "Adding " + route, null);
+                }
+
+                /*
+                 * I's a node discovery package - zigbee flavor
+                 */
+                if (input instanceof XbeeNodeDiscovery) {
+                    XbeeNodeDiscovery discovery = (XbeeNodeDiscovery) input;
+                    log.log(XbeeLogListener.Level.DEBUG, "Adding " + discovery, null);
+                    updateDiscovery(discovery);
+                }
+
+                /*
+                 * Since this packet came in fully resolved there's nothing else to do
+                 * to it.
+                 */
+                return input;
             } else {
+                /*
+                 * This packet did NOT come in fully resolved.  We should know the
+                 * Device ID since that can't change (it's in hardware) so it's OK
+                 * to trust whatever came in and just swap it.
+                 */
+                if (receivedDeviceId != null) {
+                    log.log(XbeeLogListener.Level.TRACE, "Replacing device id", null);
+                    return input.cloneWithNewDeviceId(receivedDeviceId);
+                } else {
                 /*
                  * We could not find it - nothing to do but return the original message
                  */
-                log.log(XbeeLogListener.Level.TRACE, "Doing nothing", null);
-                return input;
+                    log.log(XbeeLogListener.Level.TRACE, "Doing nothing", null);
+                    return input;
+                }
             }
         }
     }
 
-    /**
-     * Listener of route indication messages
-     */
-    private final XbeeMessageListener<XbeeExplicitRxMessage> explicitMessageListener = new XbeeMessageListener<XbeeExplicitRxMessage>() {
-        @Override
-        public void onXbeeMessage(Object sender, XbeeExplicitRxMessage msg) {
 
-            /* TODO: update the address map if the device id has changed */
-            if (msg.getDeviceId() != null) {
-                addressMap.replace(msg.getDeviceId(), msg.getAddress());
+    public XbeeAtCommandResponse filter(XbeeAtCommandResponse input) {
+
+        if (input instanceof XbeeAtCommandResponse_ND) {
+            XbeeAtCommandResponse_ND discovery = (XbeeAtCommandResponse_ND) input;
+           XbeeDeviceId deviceId = discovery.getDeviceId();
+            /*
+             * Look up the old record by Device ID
+             */
+            XbeeNodeInformation info = infos.get(deviceId.toString());
+            if (info == null) {
+                info = new XbeeNodeInformation(deviceId);
             }
+
+            info.setParentDeviceAddress(XbeeUtilities.toUnsignedIntBigEndien(discovery.getParentAddress()));
+            info.setDeviceName(discovery.getName());
+            info.setAddress(XbeeUtilities.toUnsignedIntBigEndien(discovery.getAddress()));
+            put(deviceId, info);
+
+
         }
-    };
 
+        return input;
+    }
 
-    public XbeeNodeDiscovery get(int networkAddress) {
-        return discoveries.get(networkAddress);
+    private void put(XbeeDeviceId deviceId, XbeeNodeInformation info) {
+        if (infos.containsKey(deviceId.toString())) {
+            infos.replace(deviceId, info);
+        } else {
+            infos.put(deviceId, info);
+        }
+
+        System.out.println(String.format("Device map has %d entries", infos.size()));
+    }
+
+    private void updateRoute(XbeeRouteRecordIndicator route) {
+        XbeeDeviceId deviceId = route.getDeviceId();
+            /*
+             * Look up the old record by Device ID
+             */
+        XbeeNodeInformation info = infos.get(deviceId);
+        if (info == null) {
+            info = new XbeeNodeInformation(deviceId);
+        }
+
+        info.setRoute(route.getRoute());
+        put(deviceId, info);
+
+        if (info.getAddress() == 0) {
+            this.coodinatorDeviceId = info.getDeviceId();
+        }
     }
 
 
+    private void updateDiscovery(XbeeNodeDiscovery discovery) {
+        XbeeDeviceId deviceId = discovery.getDeviceId();
+        XbeeNodeInformation info = infos.get(deviceId);
+        if (info == null) {
+            info = new XbeeNodeInformation(deviceId);
+        }
+
+        info.setParentDeviceAddress(discovery.getParentDeviceAddress());
+        info.setDeviceName(discovery.getDeviceName());
+        info.setAddress(discovery.getAddress());
+        put(deviceId, info);
+
+
+        if (info.getDeviceType() == XbeeDeviceType.COORDINATOR) {
+            this.coodinatorDeviceId = info.getDeviceId();
+        }
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("XbeeConsolidatedNodeCache{");
+        sb.append("infos=").append(infos);
+        sb.append(", unknownAddresses=").append(unknownAddresses);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    public Map<XbeeDeviceId, XbeeNodeInformation> getDiscoveryMap() {
+        return infos;
+    }
+
+    public XbeeDeviceId findCoordinatorDeviceId() {
+        return coodinatorDeviceId;
+    }
+
+    public boolean isCoordinator(int address) {
+        return address == 0x0000;
+    }
 }

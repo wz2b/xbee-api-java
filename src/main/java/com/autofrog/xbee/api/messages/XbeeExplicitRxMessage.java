@@ -1,5 +1,6 @@
 package com.autofrog.xbee.api.messages;
 
+import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 import com.autofrog.xbee.api.util.XbeeUtilities;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
@@ -31,7 +32,7 @@ public class XbeeExplicitRxMessage extends XbeeAddressableMessage {
     private final boolean isEndDevice;
     private final byte[] payload;
 
-    public XbeeExplicitRxMessage(byte[] deviceId,
+    public XbeeExplicitRxMessage(XbeeDeviceId deviceId,
                                  int address,
                                  byte sourceEndpoint,
                                  byte destEndpoint,
@@ -55,7 +56,7 @@ public class XbeeExplicitRxMessage extends XbeeAddressableMessage {
     }
 
     public XbeeExplicitRxMessage(XbeeExplicitRxMessage orig,
-                                 byte[] deviceId) {
+                                 XbeeDeviceId deviceId) {
         super(XbeeMessageType.EXPLICIT_RX.frameType, deviceId, orig.address);
         this.sourceEndpoint = orig.sourceEndpoint;
         this.destEndpoint = orig.destEndpoint;
@@ -103,7 +104,7 @@ public class XbeeExplicitRxMessage extends XbeeAddressableMessage {
 
 
     @Override
-    protected XbeeExplicitRxMessage doCloneWithNewDeviceId(byte [] newDeviceId) {
+    protected XbeeExplicitRxMessage doCloneWithNewDeviceId(XbeeDeviceId newDeviceId) {
         return new XbeeExplicitRxMessage(
                 newDeviceId,
                 this.address,
@@ -125,8 +126,8 @@ public class XbeeExplicitRxMessage extends XbeeAddressableMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("XbeeExplicitRxMessage { "
-        ).append(String.format("deviceId=0x%s", XbeeUtilities.toHex(deviceId)))
-                .append(String.format(", sourceNeworkAddress=0x%04X", address))
+        ).append(String.format("deviceId=0x%s", deviceId.toString()))
+                .append(String.format(", address=0x%04X", (short)address))
                 .append(String.format(", sourceEndpoint=0x%02X", sourceEndpoint))
                 .append(String.format(", destEndpoint=0x%02X", destEndpoint))
                 .append(String.format(", profileId=0x%04X", profileId))

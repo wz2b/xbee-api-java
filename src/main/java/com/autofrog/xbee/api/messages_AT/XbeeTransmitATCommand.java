@@ -1,4 +1,6 @@
-package com.autofrog.xbee.api.messages;
+package com.autofrog.xbee.api.messages_AT;
+
+import com.autofrog.xbee.api.messages.XbeeTransmitMessageBase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;

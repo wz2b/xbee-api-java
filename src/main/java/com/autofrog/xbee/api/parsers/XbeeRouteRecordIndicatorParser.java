@@ -3,6 +3,7 @@
 import com.autofrog.xbee.api.exceptions.XbeeException;
 import com.autofrog.xbee.api.messages.XbeeMessageBase;
 import com.autofrog.xbee.api.messages.XbeeRouteRecordIndicator;
+import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -30,8 +31,8 @@ public class XbeeRouteRecordIndicatorParser extends XbeeMessageParserBase {
     @Override
     protected XbeeMessageBase doParse(ByteBuffer buffer) throws XbeeException {
 
-        byte [] deviceId = new byte[8];
-        buffer.get(deviceId);
+        byte [] deviceIdBuffer = new byte[8];
+        buffer.get(deviceIdBuffer);
         int shortAddress = (int) (buffer.getShort() & 0xFFFF);
         byte rxOpts = buffer.get();
         boolean isAck = (rxOpts & 0x01) != 0;
@@ -44,6 +45,6 @@ public class XbeeRouteRecordIndicatorParser extends XbeeMessageParserBase {
             route[i] = addr;
         }
 
-        return new XbeeRouteRecordIndicator(deviceId, shortAddress, isAck, isBroadcast, route);
+        return new XbeeRouteRecordIndicator(new XbeeDeviceId(deviceIdBuffer), shortAddress, isAck, isBroadcast, route);
     }
 }

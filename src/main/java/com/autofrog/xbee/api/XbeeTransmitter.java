@@ -173,7 +173,6 @@ public class XbeeTransmitter {
                     .putInt(value).array());
         }
 
-        @Override
         public SendResult call() throws Exception {
             if (bytes == null || bytes.length == 0) {
                 return new SendResult(0, new XbeeEmptyMessageException());

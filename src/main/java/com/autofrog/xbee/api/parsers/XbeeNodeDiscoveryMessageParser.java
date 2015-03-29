@@ -1,10 +1,13 @@
 package com.autofrog.xbee.api.parsers;
 
 import com.autofrog.xbee.api.messages.XbeeNodeDiscovery;
+import com.autofrog.xbee.api.cache.XbeeDeviceType;
+import com.autofrog.xbee.api.messages.XbeeNodeDiscovery.EventType;
+import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 
 import java.nio.ByteBuffer;
 
-import com.autofrog.xbee.api.messages.XbeeNodeDiscovery.*;
+
 
 /**
  * <pre>
@@ -27,8 +30,8 @@ public class XbeeNodeDiscoveryMessageParser extends XbeeMessageParserBase {
     public XbeeNodeDiscovery doParse(ByteBuffer bb) {
 
         int networkAddress = bb.getShort() & 0xFFFF;
-        byte[] deviceId = new byte[8];
-        bb.get(deviceId);
+        byte[] deviceIdBuffer = new byte[8];
+        bb.get(deviceIdBuffer);
 
         StringBuilder sb = new StringBuilder();
         char ch;
@@ -45,16 +48,16 @@ public class XbeeNodeDiscoveryMessageParser extends XbeeMessageParserBase {
         int parentDeviceAddress = bb.getShort() & 0xFFFF;
 
         byte deviceTypeByte = bb.get();
-        XbeeNodeDiscovery.DeviceType type = null;
+        XbeeDeviceType type = null;
         switch (deviceTypeByte) {
             case 0:
-                type = DeviceType.COORDINATOR;
+                type = XbeeDeviceType.COORDINATOR;
                 break;
             case 1:
-                type = DeviceType.ROUTER;
+                type = XbeeDeviceType.ROUTER;
                 break;
             case 2:
-                type = DeviceType.END_DEVICE;
+                type = XbeeDeviceType.END_DEVICE;
                 break;
         }
 
@@ -83,7 +86,7 @@ public class XbeeNodeDiscoveryMessageParser extends XbeeMessageParserBase {
 
 
         return new XbeeNodeDiscovery(networkAddress,
-                deviceId,
+                new XbeeDeviceId(deviceIdBuffer),
                 deviceName,
                 parentDeviceAddress,
                 type,

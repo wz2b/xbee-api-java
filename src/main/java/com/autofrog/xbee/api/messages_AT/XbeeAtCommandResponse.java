@@ -1,5 +1,6 @@
-package com.autofrog.xbee.api.messages;
+package com.autofrog.xbee.api.messages_AT;
 
+import com.autofrog.xbee.api.messages.XbeeMessageBase;
 import com.autofrog.xbee.api.util.XbeeUtilities;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 

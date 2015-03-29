@@ -1,5 +1,7 @@
 package com.autofrog.xbee.api.messages;
 
+import com.autofrog.xbee.api.cache.XbeeDeviceType;
+import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
 /**
@@ -22,15 +24,6 @@ import com.autofrog.xbee.api.protocol.XbeeMessageType;
 public class XbeeNodeDiscovery extends XbeeAddressableMessage {
 
     /**
-     * Types of devices that can send node discovery messages
-     */
-    public static enum DeviceType {
-        COORDINATOR,
-        ROUTER,
-        END_DEVICE;
-    }
-
-    /**
      * Types of events that can trigger node discovery messages to be sent
      */
     public static enum EventType {
@@ -43,13 +36,13 @@ public class XbeeNodeDiscovery extends XbeeAddressableMessage {
 
     private String deviceName;
     private int parentDeviceAddress;
-    private DeviceType deviceType;
+    private XbeeDeviceType deviceType;
     private EventType event;
     private int profileId;
     private int manufacturerId;
 
-    public XbeeNodeDiscovery(int address, byte[] deviceId, String deviceName,
-                             int parentDeviceAddress, DeviceType deviceType, EventType event,
+    public XbeeNodeDiscovery(int address, XbeeDeviceId deviceId, String deviceName,
+                             int parentDeviceAddress, XbeeDeviceType deviceType, EventType event,
                              int profileId, int manufacturerId) {
         super(XbeeMessageType.NODE_DISCOVERY.frameType, deviceId, address);
         this.deviceName = deviceName;
@@ -76,7 +69,7 @@ public class XbeeNodeDiscovery extends XbeeAddressableMessage {
         return parentDeviceAddress;
     }
 
-    public DeviceType getDeviceType() {
+    public XbeeDeviceType getDeviceType() {
         return deviceType;
     }
 
@@ -93,7 +86,7 @@ public class XbeeNodeDiscovery extends XbeeAddressableMessage {
     }
 
     @Override
-    protected XbeeAddressableMessage doCloneWithNewDeviceId(byte[] newDeviceId) {
+    protected XbeeAddressableMessage doCloneWithNewDeviceId(XbeeDeviceId newDeviceId) {
         return new XbeeNodeDiscovery(address,
                 newDeviceId,
                 this.deviceName,

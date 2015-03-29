@@ -1,5 +1,7 @@
 package com.autofrog.xbee.api.messages;
 
+import com.autofrog.xbee.api.protocol.XbeeDeviceId;
+
 /**
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
@@ -16,11 +18,11 @@ package com.autofrog.xbee.api.messages;
  * </pre>
  */
 public abstract class XbeeAddressableMessage extends XbeeMessageBase {
-    protected final byte[] deviceId;
+    protected final XbeeDeviceId deviceId;
     protected final int address;
 
 
-    public XbeeAddressableMessage(byte rawFrameType, byte[] deviceId, int address) {
+    public XbeeAddressableMessage(byte rawFrameType, XbeeDeviceId deviceId, int address) {
         super(rawFrameType);
         this.deviceId = deviceId;
         this.address = address;
@@ -38,7 +40,7 @@ public abstract class XbeeAddressableMessage extends XbeeMessageBase {
         return address;
     }
 
-    public final byte[]  getDeviceId() {
+    public XbeeDeviceId  getDeviceId() {
         return deviceId;
     }
 
@@ -49,14 +51,14 @@ public abstract class XbeeAddressableMessage extends XbeeMessageBase {
      * @param newDeviceId new address
      * @return
      */
-    protected abstract XbeeAddressableMessage doCloneWithNewDeviceId(byte [] newDeviceId);
+    protected abstract XbeeAddressableMessage doCloneWithNewDeviceId(XbeeDeviceId newDeviceId);
 
     /**
      * Return a copy of the object with a modified network address
      * @param newDeviceId
      * @return
      */
-    public XbeeAddressableMessage cloneWithNewDeviceId(byte[] newDeviceId) {
+    public XbeeAddressableMessage cloneWithNewDeviceId(XbeeDeviceId newDeviceId) {
         return doCloneWithNewDeviceId(newDeviceId);
     }
 
