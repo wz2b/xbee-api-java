@@ -1,6 +1,6 @@
 package com.autofrog.xbee.api.util;
 
-import com.autofrog.xbee.api.cache.XbeeDeviceType;
+import com.autofrog.xbee.api.cache.XbeeDeviceTypeEnum;
 import com.autofrog.xbee.api.cache.XbeeNodeCache;
 import com.autofrog.xbee.api.cache.XbeeNodeInformation;
 import com.autofrog.xbee.api.protocol.XbeeDeviceId;
@@ -27,24 +27,15 @@ import java.util.Map;
  */
 public class PlantUmlGenerator {
 
-    private final XbeeNodeCache cache;
     /**
      * Our logger
      */
     private final static XbeeLogger log = XbeeLogger.getLogger(PlantUmlGenerator.class);
-
-    public enum PlantUmlOpts {
-        SHOW_ALL,
-        SHOW_NAME,
-        SHOW_PROFILE,
-        SHOW_MANUFACTURER,
-        SHOW_TYPE
-    }
+    private final XbeeNodeCache cache;
 
     public PlantUmlGenerator(XbeeNodeCache cache) {
         this.cache = cache;
     }
-
 
     public String generatePlantUML(PlantUmlOpts... options) {
         StringBuilder sb = new StringBuilder();
@@ -64,25 +55,30 @@ public class PlantUmlGenerator {
          */
         XbeeDeviceId coordinator = cache.findCoordinatorDeviceId();
         if (coordinator != null) {
-            dumpDevice(sb, cache.getDiscoveryMap().get(coordinator));
+            log.log(XbeeLogListener.Level.INFO, "Dumping the coordinator", null);
+            XbeeNodeInformation actualCoordinator = discoveryMap.get(coordinator);
+            dumpDevice(sb, actualCoordinator, false);
+        } else {
+            System.err.println("No coordinator");
         }
 
         for (XbeeDeviceId deviceId : discoveryMap.keySet()) {
-
             XbeeNodeInformation d = discoveryMap.get(deviceId);
-            if (coordinator != null && d.getDeviceType() != XbeeDeviceType.COORDINATOR) {
+            if (!d.isCoordinator()) {
                 try {
-                    sb = dumpDevice(sb, d);
+                    sb = dumpDevice(sb, d, true);
                 } catch (Throwable t) {
                     log.log(XbeeLogListener.Level.ERROR, "Failed to describe device", t);
                 }
+            } else {
+                System.err.println("Skipping coordinator " + d.getDeviceName());
             }
         }
         sb.append("@enduml\n");
         return sb.toString();
     }
 
-    private StringBuilder dumpDevice(StringBuilder sb, XbeeNodeInformation info) {
+    private StringBuilder dumpDevice(StringBuilder sb, XbeeNodeInformation info, boolean dumpRoutes) {
         String name = info.getDeviceName();
         if (info == null) {
             name = String.format("Device %04X\n", info.getAddress());
@@ -90,64 +86,74 @@ public class PlantUmlGenerator {
 
         int address = info.getAddress();
 
-        String deviceTypeString = "Router";
-        if (address == 0)
-            deviceTypeString = "Coordinator";
+        String deviceTypeString;
 
-        XbeeDeviceType dt = info.getDeviceType();
+
+        XbeeDeviceTypeEnum dt = info.getDeviceType();
         if (dt == null) {
             sb.append(String.format("state %04X as \"%s\" <<%s>> {\n",
                     address,
                     "unknown", "unknown"));
-        } else if (dt == XbeeDeviceType.COORDINATOR) {
+        } else if (dt == XbeeDeviceTypeEnum.COORDINATOR) {
             /* Don't show address on coordinator */
             sb.append(String.format("state %04X as \"%s\" <<%s>> {\n",
                     address,
-                    deviceTypeString,
-                    deviceTypeString.toLowerCase()));
+                    dt,
+                    dt.toString().toLowerCase()));
         } else {
             sb.append(String.format("state %04X as \"%s %04X\" <<%s>> {\n",
                     address,
-                    deviceTypeString,
+                    dt,
                     address,
-                    deviceTypeString.toLowerCase()));
+                    dt.toString().toLowerCase()));
         }
 
-        sb.append(String.format("    %04X: %s\n", address, deviceTypeString));
+        sb.append(String.format("    %04X: %s\n", address, name));
+        sb.append(String.format("    %04X: %s\n", address, info.getDeviceId().toString()));
+        sb.append(String.format("    %04X: %s %04X\n", address, dt, address));
         sb.append(String.format("    %04X: Manufacturer: %04X\n", address, info.getManufacturerId()));
         sb.append(String.format("    %04X: Profile: %04X\n", address, info.getProfileId()));
         sb.append(String.format("    %04X: Parent: %04X\n", address, info.getParentDeviceAddress()));
 
-
-        sb.append(String.format("    %04X: %s\n", address, dt));
-        sb.append(String.format("    %04X: Name: %s\n", address, name));
         sb.append("}\n");
 
         /*
          * Dump routes
          */
-        if (info.getRoute() == null || info.getRoute().length == 0) {
+        if (dumpRoutes) {
+            if (info.getRoute() == null || info.getRoute().length == 0 || !info.isCoordinator()) {
             /*
              * If it either has no route or else the route length is zero it is
              * probably talking directly to the coordinator
              */
-            sb.append(String.format("%04X --> coordinator\n", address));
-        } else {
+                sb.append(String.format("0000 --> %04X\n", address));
+            } else {
             /*
              * It has a route of at least one hop
              */
-            sb.append(String.format("%04X", address));
-            for (Integer hop : info.getRoute()) {
-                sb.append(String.format("%04X", hop));
+                sb.append(String.format("%04X", address));
+                int[] hops = info.getRoute();
+                for (int i = hops.length - 1; i > 0; i--) {
 
-                if (cache.isCoordinator(hop)) {
-                    sb.append(" --> coordinator");
-                } else {
-                    sb.append(String.format(" --> %04X", hop));
+                    sb.append(String.format("%04X", hops[i]));
+
+                    if (cache.isCoordinator(hops[i])) {
+                        sb.append(" --> 0000");
+                    } else {
+                        sb.append(String.format(" --> %04X", hops[i]));
+                    }
                 }
+                sb.append("\n");
             }
-            sb.append("\n");
         }
         return sb;
+    }
+
+    public enum PlantUmlOpts {
+        SHOW_ALL,
+        SHOW_NAME,
+        SHOW_PROFILE,
+        SHOW_MANUFACTURER,
+        SHOW_TYPE
     }
 }

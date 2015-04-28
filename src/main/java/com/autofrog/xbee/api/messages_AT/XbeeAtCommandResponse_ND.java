@@ -1,5 +1,6 @@
 package com.autofrog.xbee.api.messages_AT;
 
+import com.autofrog.xbee.api.cache.XbeeDeviceTypeEnum;
 import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 import com.autofrog.xbee.api.util.XbeeUtilities;
 
@@ -24,7 +25,6 @@ public class XbeeAtCommandResponse_ND extends XbeeAtCommandResponse {
     private static final int START_MY = 0;
     private static final int START_ADDRESS = 2;
     private static final int START_NI = 10;
-    private final int len_NI;
     private static final int START_PARENT_NETWORK_ADDRESS_AFTER_NI = 0;
     private static final int START_DEVICE_TYPE_AFTER_NI = 2;
     private static final int START_STATUS_AFTER_NI = 3;
@@ -32,8 +32,26 @@ public class XbeeAtCommandResponse_ND extends XbeeAtCommandResponse {
     private static final int START_MFG_ID_AFTER_NI = 7;
     private static final int START_MODULE_TYPE_AFTER_NI = 9;
     private static final int START_PRODUCT_TYPE_AFTER_NI = 11;
+    private final int address;
+    private final XbeeDeviceId deviceId;
+    private final String name;
+    private final int profileId;
+    private final int mfgId;
+    private final int parentAddress;
+    private final XbeeDeviceTypeEnum deviceType;
+    private final int deviceStatus;
+    private final AtCommandStatus commandStatus;
+    private final int moduleType;
+    private final int productType;
+    private int len_NI;
 
-    public XbeeAtCommandResponse_ND(String command, byte statusCode, AtCommandStatus status, byte[] data, byte sequence) {
+
+    public XbeeAtCommandResponse_ND(String command,
+                                    byte statusCode,
+                                    AtCommandStatus status,
+                                    byte[] data,
+                                    byte sequence) {
+
         super(command, statusCode, status, data, sequence);
 
         StringBuilder sb = new StringBuilder();
@@ -41,96 +59,135 @@ public class XbeeAtCommandResponse_ND extends XbeeAtCommandResponse {
         while (data[i] != 0) {
             i++;
         }
-        len_NI = i - START_NI;
+        this.len_NI = i - START_NI;
+
+        this.address = XbeeUtilities.toUnsignedIntLittleEndien(Arrays.copyOfRange(data, START_MY, START_ADDRESS));
+        this.deviceId = new XbeeDeviceId(Arrays.copyOfRange(data, START_ADDRESS, START_NI));
+        this.name = new String(Arrays.copyOfRange(data, START_NI, START_NI + len_NI));
+        this.profileId = XbeeUtilities.toUnsignedIntLittleEndien(getSliceAfterNI(START_PROFILE_ID_AFTER_NI, 2));
+        this.mfgId = XbeeUtilities.toUnsignedIntLittleEndien(getSliceAfterNI(START_MFG_ID_AFTER_NI, 2));
+        this.parentAddress = XbeeUtilities.toUnsignedIntLittleEndien(getSliceAfterNI(START_PARENT_NETWORK_ADDRESS_AFTER_NI, 2));
+        this.deviceStatus = XbeeUtilities.toUnsignedIntBigEndien(getSliceAfterNI(START_STATUS_AFTER_NI, 2));
+        this.commandStatus = status;
+
+        int moduleTypeTemp;
+        if (data.length > START_NI + len_NI + START_MODULE_TYPE_AFTER_NI) {
+            moduleTypeTemp = XbeeUtilities.toUnsignedIntBigEndien(
+                    getSliceAfterNI(START_MODULE_TYPE_AFTER_NI, 2));
+        } else {
+            moduleTypeTemp = 0;
+        }
+        this.moduleType = moduleTypeTemp;
+
+        int productTypeTemp;
+        if (data.length > START_NI + len_NI + START_PRODUCT_TYPE_AFTER_NI) {
+            productTypeTemp = XbeeUtilities.toUnsignedIntBigEndien(getSliceAfterNI(START_PRODUCT_TYPE_AFTER_NI, 2));
+        } else {
+            productTypeTemp = 0;
+        }
+        this.productType = productTypeTemp;
+
+        int deviceTypeNum = XbeeUtilities.toUnsignedIntBigEndien(
+                getSliceAfterNI(START_DEVICE_TYPE_AFTER_NI, 2));
+        XbeeDeviceTypeEnum deviceTypeTemp;
+        switch (deviceTypeNum & 0x00FF) {
+            case 0x00:
+                deviceTypeTemp = XbeeDeviceTypeEnum.COORDINATOR;
+
+                break;
+            case 0x01:
+                deviceTypeTemp = XbeeDeviceTypeEnum.ROUTER;
+                break;
+            case 0x02:
+                deviceTypeTemp = XbeeDeviceTypeEnum.END_DEVICE;
+                break;
+            default:
+                deviceTypeTemp = XbeeDeviceTypeEnum.UNKNOWN;
+                break;
+        }
+
+        deviceType = deviceTypeTemp;
+
+
     }
 
-    public byte[] getAddress() {
-        return Arrays.copyOfRange(data, START_MY, START_ADDRESS);
+    public int getAddress() {
+        return address;
     }
 
     public XbeeDeviceId getDeviceId() {
-        return new XbeeDeviceId(Arrays.copyOfRange(data, START_ADDRESS, START_NI));
+        return deviceId;
     }
 
     public String getName() {
-        return new String(
-                Arrays.copyOfRange(data, START_NI, START_NI+len_NI));
+        return name;
     }
 
-    public byte[] getProfileId() {
-        return getSliceAfterNI(START_PROFILE_ID_AFTER_NI, 2);
+    public int getProfileId() {
+        return profileId;
     }
 
-    public byte[] getMfgId() {
-        return getSliceAfterNI(START_MFG_ID_AFTER_NI, 2);
+    public int getMfgId() {
+        return mfgId;
     }
 
 
-    public byte [] getParentAddress() {
-        return getSliceAfterNI(START_PARENT_NETWORK_ADDRESS_AFTER_NI, 2);
+    public int getParentAddress() {
+        return parentAddress;
     }
 
-    public byte [] getDeviceType() {
-        return getSliceAfterNI(START_DEVICE_TYPE_AFTER_NI, 2);
+    public XbeeDeviceTypeEnum getDeviceType() {
+        return deviceType;
     }
 
-    public byte[] getDeviceStatus() {
-        return getSliceAfterNI(START_STATUS_AFTER_NI, 2);
+    public int getDeviceStatus() {
+        return deviceStatus;
     }
 
     private byte[] getSliceAfterNI(int start, int len) {
         start = start + START_NI + len_NI;
-        return Arrays.copyOfRange(data, start, start  + len);
+        return Arrays.copyOfRange(data, start, start + len);
     }
 
     public AtCommandStatus getCommandStatus() {
         return commandStatus;
     }
 
-    public byte [] getModuleType() {
-        if(data.length > START_NI + len_NI + START_MODULE_TYPE_AFTER_NI ) {
-            return getSliceAfterNI(START_MODULE_TYPE_AFTER_NI, 2);
-        } else {
-            return null;
-        }
+    public int getModuleType() {
+        return moduleType;
     }
 
-    public byte[] getProductType() {
-        if(data.length > START_NI + len_NI + START_PRODUCT_TYPE_AFTER_NI ) {
-            return getSliceAfterNI(START_PRODUCT_TYPE_AFTER_NI, 2);
-        } else {
-            return null;
-        }
+    public int getProductType() {
+        return productType;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("XbeeAtCommandResponse_ND {");
-        sb.append("command='").append(command).append('\'');
-        sb.append(", commandStatus=").append(getCommandStatus());
+        if (command != null)
+            sb.append("command='").append(command).append('\'');
+
+        if (commandStatus != null)
+            sb.append(", commandStatus=").append(getCommandStatus());
+
         sb.append(", statusCode=").append(statusCode);
         sb.append(", sequence=").append(sequence);
-        sb.append(", address=0x").append(getDeviceId().toString());
-        sb.append(", parent=0x").append(XbeeUtilities.toHex(getParentAddress()));
-        sb.append(", deviceType=0x").append(XbeeUtilities.toHex(getDeviceType()));
-        sb.append(", deviceStatus=0x").append(XbeeUtilities.toHex(getDeviceStatus()));
-        sb.append(", networkAddress=0x").append(XbeeUtilities.toHex(getAddress()));
+
+        if (deviceId != null)
+            sb.append(", address=0x").append(deviceId.toString());
+
+        sb.append(", parent=0x").append(String.format("0x%04X", parentAddress));
+
+        if (deviceType != null)
+            sb.append(", deviceType=").append(deviceType);
+
+        sb.append(", deviceStatus=0x").append(String.format("0x%04X", deviceStatus));
+        sb.append(", networkAddress=0x").append(String.format("0x%04X", address));
         sb.append(", name='").append(getName()).append('\'');
-        sb.append(", profile=0x").append(XbeeUtilities.toHex(getProfileId()));
-        sb.append(", mfgId=0x").append(XbeeUtilities.toHex(getMfgId()));
-
-        if(getModuleType() != null) {
-            sb.append(", moduleType=0x").append(XbeeUtilities.toHex(getModuleType()));
-        } else {
-            sb.append(", moduleType=UNKNOWN");
-        }
-
-        if(getProductType() != null) {
-            sb.append(", productType=0x").append(XbeeUtilities.toHex(getProductType()));
-        } else {
-            sb.append(", productType=UNKNOWN");
-        }
-
+        sb.append(", profile=0x").append(String.format("0x%04X", profileId));
+        sb.append(", mfgId=0x").append(String.format("%04X", mfgId));
+        sb.append(", moduleType=0x").append(String.format("0x%04X", moduleType));
+        sb.append(", productType=0x").append(String.format("%04X", productType));
         sb.append(" }");
         return sb.toString();
     }

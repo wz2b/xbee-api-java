@@ -1,6 +1,6 @@
 package com.autofrog.xbee.api.messages;
 
-import com.autofrog.xbee.api.cache.XbeeDeviceType;
+import com.autofrog.xbee.api.cache.XbeeDeviceTypeEnum;
 import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
@@ -23,26 +23,14 @@ import com.autofrog.xbee.api.protocol.XbeeMessageType;
  */
 public class XbeeNodeDiscovery extends XbeeAddressableMessage {
 
-    /**
-     * Types of events that can trigger node discovery messages to be sent
-     */
-    public static enum EventType {
-        NONE,
-        PUSHBUTTON,
-        JOINED,
-        POWER_CYCLE
-    }
-
-
     private String deviceName;
     private int parentDeviceAddress;
-    private XbeeDeviceType deviceType;
+    private XbeeDeviceTypeEnum deviceType;
     private EventType event;
     private int profileId;
     private int manufacturerId;
-
     public XbeeNodeDiscovery(int address, XbeeDeviceId deviceId, String deviceName,
-                             int parentDeviceAddress, XbeeDeviceType deviceType, EventType event,
+                             int parentDeviceAddress, XbeeDeviceTypeEnum deviceType, EventType event,
                              int profileId, int manufacturerId) {
         super(XbeeMessageType.NODE_DISCOVERY.frameType, deviceId, address);
         this.deviceName = deviceName;
@@ -69,7 +57,7 @@ public class XbeeNodeDiscovery extends XbeeAddressableMessage {
         return parentDeviceAddress;
     }
 
-    public XbeeDeviceType getDeviceType() {
+    public XbeeDeviceTypeEnum getDeviceType() {
         return deviceType;
     }
 
@@ -109,5 +97,15 @@ public class XbeeNodeDiscovery extends XbeeAddressableMessage {
                 ", profileId=" + String.format("0x%04X", profileId) +
                 ", manufacturerId=" + String.format("0x%04X", manufacturerId) +
                 '}';
+    }
+
+    /**
+     * Types of events that can trigger node discovery messages to be sent
+     */
+    public static enum EventType {
+        NONE,
+        PUSHBUTTON,
+        JOINED,
+        POWER_CYCLE
     }
 }

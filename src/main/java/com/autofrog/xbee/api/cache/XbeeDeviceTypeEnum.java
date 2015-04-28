@@ -17,7 +17,7 @@ package com.autofrog.xbee.api.cache;
  * Lesser General Public License for more details.
  * </pre>
  */
-public enum XbeeDeviceType {
+public enum XbeeDeviceTypeEnum {
     COORDINATOR,
     ROUTER,
     END_DEVICE,

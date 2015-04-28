@@ -25,7 +25,7 @@ import java.util.Arrays;
  */
 public class XbeeDeviceId implements Comparable<XbeeDeviceId> {
 
-    private final byte[] deviceId;
+    private byte[] deviceId;
 
     public XbeeDeviceId(byte[] deviceId) {
         this.deviceId = deviceId;

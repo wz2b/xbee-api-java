@@ -2,14 +2,16 @@ package com.autofrog.xbee.api;
 
 import com.autofrog.xbee.api.listeners.XbeeMessageListener;
 import com.autofrog.xbee.api.listeners.XbeeParsingExceptionListener;
-
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.*;
-
 import com.autofrog.xbee.api.messages.XbeeExplicitRxMessage;
 import org.easymock.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.math.BigInteger;
+
+import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.eq;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -104,12 +106,15 @@ public class XbeeMessageParserTest extends EasyMockSupport {
         assertEquals((long) 0x2211, result.getClusterId());
         assertEquals((byte) 0xE0, (byte) result.getSourceEndpoint());
         assertEquals((byte) 0xE0, (byte) result.getDestEndpoint());
-        assertEquals((short)0xC105, (short)result.getProfileId());
+        assertEquals((short) 0xC105, (short) result.getProfileId());
         assertTrue(result.isBroadcast());
         assertFalse(result.isAck());
         assertFalse(result.isEncrypted());
         assertFalse(result.isEndDevice());
-        assertEquals(0x0013a20040522baaL, result.getDeviceId());
+
+        byte[] deviceIdString = result.getDeviceId().getBytes();
+        long longDeviceId = new BigInteger(deviceIdString).longValue();
+        assertEquals(0x0013a20040522baaL, longDeviceId);
     }
 
 }

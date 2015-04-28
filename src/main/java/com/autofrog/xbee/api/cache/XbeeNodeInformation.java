@@ -2,6 +2,8 @@ package com.autofrog.xbee.api.cache;
 
 import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 
+import java.util.Arrays;
+
 /**
  * A mutable description of one node on the network
  * <p/>
@@ -25,7 +27,7 @@ public class XbeeNodeInformation {
     private int address;
     private String deviceName;
     private int parentDeviceAddress;
-    private XbeeDeviceType deviceType;
+    private XbeeDeviceTypeEnum deviceType;
     private int profileId;
     private int manufacturerId;
     private int[] route;
@@ -63,11 +65,11 @@ public class XbeeNodeInformation {
         this.parentDeviceAddress = parentDeviceAddress;
     }
 
-    public XbeeDeviceType getDeviceType() {
+    public XbeeDeviceTypeEnum getDeviceType() {
         return deviceType;
     }
 
-    public void setDeviceType(XbeeDeviceType deviceType) {
+    public void setDeviceType(XbeeDeviceTypeEnum deviceType) {
         this.deviceType = deviceType;
     }
 
@@ -93,5 +95,44 @@ public class XbeeNodeInformation {
 
     public void setRoute(int[] route) {
         this.route = route;
+    }
+
+
+    public boolean isCoordinator() {
+        System.err.println(String.format("Is this the coordinator?  Address %04X = %s", address, deviceType));
+        if (address == 0) {
+            System.err.println(String.format("This is the coordinator because its address is %04X (%s)", address, deviceType));
+            return true;
+        } else {
+            boolean maybe = deviceType == XbeeDeviceTypeEnum.COORDINATOR;
+            System.err.println(String.format("%04X is %s the coordinator because its type (%s)",
+                    address,
+                    maybe ? "" : "NOT",
+                    deviceType));
+            return maybe;
+        }
+    }
+
+    public boolean isRouter() {
+        return deviceType == XbeeDeviceTypeEnum.ROUTER;
+    }
+
+    public boolean isEndDevice() {
+        return deviceType == XbeeDeviceTypeEnum.END_DEVICE;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("XbeeNodeInformation{");
+        sb.append("deviceId=").append(deviceId);
+        sb.append(", address=").append(address);
+        sb.append(", deviceName='").append(deviceName).append('\'');
+        sb.append(", parentDeviceAddress=").append(parentDeviceAddress);
+        sb.append(", deviceType=").append(deviceType);
+        sb.append(", profileId=").append(profileId);
+        sb.append(", manufacturerId=").append(manufacturerId);
+        sb.append(", route=").append(Arrays.toString(route));
+        sb.append('}');
+        return sb.toString();
     }
 }

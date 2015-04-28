@@ -2,7 +2,10 @@ package com.autofrog.xbee.api.parsers;
 
 import com.autofrog.xbee.api.cache.XbeeNodeCache;
 import com.autofrog.xbee.api.exceptions.XbeeException;
-import com.autofrog.xbee.api.messages.*;
+import com.autofrog.xbee.api.messages.XbeeAddressableMessage;
+import com.autofrog.xbee.api.messages.XbeeMessageBase;
+import com.autofrog.xbee.api.messages.XbeeNodeDiscovery;
+import com.autofrog.xbee.api.messages.XbeeUnknownMessage;
 import com.autofrog.xbee.api.messages_AT.XbeeAtCommandResponse_ND;
 import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
@@ -52,15 +55,12 @@ public class XbeeRootParser {
     }
 
     public final XbeeMessageBase parse(byte frameType, byte[] bytes) throws XbeeException, IOException {
-
+        System.err.println(String.format("%02x", frameType & 0xFF));
         XbeeMessageParserBase parser = parsers.get(frameType);
 
 
         if (parser != null) {
-
-
             XbeeMessageBase message = parser.parse(bytes);
-            System.out.println("Received a message type " + message.getClass().getCanonicalName());
             if (XbeeAddressableMessage.class.isAssignableFrom(message.getClass())) {
                 message = cache.filter((XbeeAddressableMessage) message);
             } else if (message instanceof XbeeNodeDiscovery) {

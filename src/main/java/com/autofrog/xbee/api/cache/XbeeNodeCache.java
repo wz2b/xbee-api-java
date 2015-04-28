@@ -10,9 +10,11 @@ import com.autofrog.xbee.api.protocol.XbeeApiConstants;
 import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 import com.autofrog.xbee.api.util.XbeeLogListener;
 import com.autofrog.xbee.api.util.XbeeLogger;
-import com.autofrog.xbee.api.util.XbeeUtilities;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -46,20 +48,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class XbeeNodeCache {
 
+    /**
+     * Our logger
+     */
+    private final static XbeeLogger log = XbeeLogger.getLogger(XbeeNodeCache.class);
     private final ConcurrentHashMap<XbeeDeviceId, XbeeNodeInformation> infos;
-    private XbeeDeviceId coodinatorDeviceId = null;
-
-
     /**
      * List of devices (by short address) that we don't know about.  This is a simply
      * synchornized set.
      */
     private final Set<Short> unknownAddresses;
-
-    /**
-     * Our logger
-     */
-    private final static XbeeLogger log = XbeeLogger.getLogger(XbeeNodeCache.class);
 
     public XbeeNodeCache() {
         infos = new ConcurrentHashMap<XbeeDeviceId, XbeeNodeInformation>();
@@ -137,8 +135,11 @@ public class XbeeNodeCache {
     public XbeeAtCommandResponse filter(XbeeAtCommandResponse input) {
 
         if (input instanceof XbeeAtCommandResponse_ND) {
+
             XbeeAtCommandResponse_ND discovery = (XbeeAtCommandResponse_ND) input;
-           XbeeDeviceId deviceId = discovery.getDeviceId();
+
+            XbeeDeviceId deviceId = discovery.getDeviceId();
+
             /*
              * Look up the old record by Device ID
              */
@@ -147,12 +148,16 @@ public class XbeeNodeCache {
                 info = new XbeeNodeInformation(deviceId);
             }
 
-            info.setParentDeviceAddress(XbeeUtilities.toUnsignedIntBigEndien(discovery.getParentAddress()));
+            info.setParentDeviceAddress(discovery.getParentAddress());
             info.setDeviceName(discovery.getName());
-            info.setAddress(XbeeUtilities.toUnsignedIntBigEndien(discovery.getAddress()));
+            info.setManufacturerId(discovery.getMfgId());
+
+
+            info.setDeviceType(discovery.getDeviceType());
+            info.setAddress(discovery.getAddress());
+
+
             put(deviceId, info);
-
-
         }
 
         return input;
@@ -180,10 +185,6 @@ public class XbeeNodeCache {
 
         info.setRoute(route.getRoute());
         put(deviceId, info);
-
-        if (info.getAddress() == 0) {
-            this.coodinatorDeviceId = info.getDeviceId();
-        }
     }
 
 
@@ -199,10 +200,6 @@ public class XbeeNodeCache {
         info.setAddress(discovery.getAddress());
         put(deviceId, info);
 
-
-        if (info.getDeviceType() == XbeeDeviceType.COORDINATOR) {
-            this.coodinatorDeviceId = info.getDeviceId();
-        }
     }
 
     @Override
@@ -219,10 +216,17 @@ public class XbeeNodeCache {
     }
 
     public XbeeDeviceId findCoordinatorDeviceId() {
-        return coodinatorDeviceId;
+        for (XbeeNodeInformation info : infos.values()) {
+            if (isCoordinator(info.getAddress())) {
+                return info.getDeviceId();
+            }
+        }
+        return null;
     }
 
     public boolean isCoordinator(int address) {
         return address == 0x0000;
     }
+
+
 }

@@ -1,7 +1,7 @@
 package com.autofrog.xbee.api.parsers;
 
+import com.autofrog.xbee.api.cache.XbeeDeviceTypeEnum;
 import com.autofrog.xbee.api.messages.XbeeNodeDiscovery;
-import com.autofrog.xbee.api.cache.XbeeDeviceType;
 import com.autofrog.xbee.api.messages.XbeeNodeDiscovery.EventType;
 import com.autofrog.xbee.api.protocol.XbeeDeviceId;
 
@@ -48,16 +48,16 @@ public class XbeeNodeDiscoveryMessageParser extends XbeeMessageParserBase {
         int parentDeviceAddress = bb.getShort() & 0xFFFF;
 
         byte deviceTypeByte = bb.get();
-        XbeeDeviceType type = null;
+        XbeeDeviceTypeEnum type = null;
         switch (deviceTypeByte) {
             case 0:
-                type = XbeeDeviceType.COORDINATOR;
+                type = XbeeDeviceTypeEnum.COORDINATOR;
                 break;
             case 1:
-                type = XbeeDeviceType.ROUTER;
+                type = XbeeDeviceTypeEnum.ROUTER;
                 break;
             case 2:
-                type = XbeeDeviceType.END_DEVICE;
+                type = XbeeDeviceTypeEnum.END_DEVICE;
                 break;
         }
 
