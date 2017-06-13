@@ -6,9 +6,6 @@ import java.util.Arrays;
 
 /**
  * Created by chrisp on 028 3/28/2015.
- * <p/>
- * <p/>
- * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *

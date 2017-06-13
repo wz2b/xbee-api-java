@@ -8,7 +8,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * A simple loggerName for internal components.
  *
- * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *

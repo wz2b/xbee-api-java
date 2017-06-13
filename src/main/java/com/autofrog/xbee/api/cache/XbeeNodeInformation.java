@@ -6,7 +6,6 @@ import java.util.Arrays;
 
 /**
  * A mutable description of one node on the network
- * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *

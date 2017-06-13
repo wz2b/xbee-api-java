@@ -6,7 +6,6 @@ import com.autofrog.xbee.api.protocol.XbeeMessageType;
 
 /**
  * Message recei=ved when a node joins the network, or possibly when one is queried
- * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *

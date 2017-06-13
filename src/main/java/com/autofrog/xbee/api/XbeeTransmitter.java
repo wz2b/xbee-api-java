@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Xbee serial port transmit adapter.
- * <p/>
  * This class holds an output stream.  The only synchronization that it performs is that it only
  * uses a single thread to write.  If the user's application sends to the port outside of this
  * instance then they should make their own OutputStream that provides proper synchronization.

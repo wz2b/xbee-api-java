@@ -19,19 +19,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A cache of discovered device information.
- * <p/>
  * The purpose if this cache is to be able to collect short to long addresses,
  * routes, and other node information.
- * <p/>
  * The Xbee modules (including the coodinatorDeviceId) add device IDs to messages when
  * possible, but because of memory limitations they cannot do it reliably on very
  * large networks.
- * <p/>
  * Part of he challenge is that the 16 bit address of a device can change under certain
  * conditions.  This includes address conflicts or if a device leaves and rejoins the
  * network.  Since the 16 bit address is not static, it is not a reliable way to identify
  * a device.
- * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *
@@ -80,7 +76,7 @@ public class XbeeNodeCache {
         final boolean is_broadcast = network_address_is_broadcast || device_id_is_broadcast;
         final boolean is_resolved = device_id_is_known && network_address_is_known;
 
-        /**
+        /*
          * Do not modify broadcasts.
          */
         if (is_broadcast) {
