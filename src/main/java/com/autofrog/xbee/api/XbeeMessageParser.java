@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
  * </pre>
  */
 public class XbeeMessageParser {
-
     /**
      * States the parser may be in on a byte-by-byte basis
      */
@@ -294,7 +293,6 @@ public class XbeeMessageParser {
                     case WAITING_FOR_CHECKSUM:
                         byte expected = (byte) (0xFF - checksum);
                         if (expected == b) {
-
                             try {
                                 return rootParser.parse(frameType, buf);
                             } catch (Exception e) {
