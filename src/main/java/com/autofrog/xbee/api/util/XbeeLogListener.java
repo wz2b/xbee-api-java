@@ -6,7 +6,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * An interface for receiving log and debug messages from components of the Xbee library
  * that can be adapted to any logger of your choosing.
  *
- * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *

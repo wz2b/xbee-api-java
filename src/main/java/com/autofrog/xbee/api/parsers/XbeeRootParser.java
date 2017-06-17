@@ -55,7 +55,6 @@ public class XbeeRootParser {
     }
 
     public final XbeeMessageBase parse(byte frameType, byte[] bytes) throws XbeeException, IOException {
-        System.err.println(String.format("%02x", frameType & 0xFF));
         XbeeMessageParserBase parser = parsers.get(frameType);
 
 

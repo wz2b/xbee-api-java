@@ -9,8 +9,6 @@ import java.util.Map;
 
 /**
  * Generates diagrams and reports from a node database
- * <p/>
- * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *

@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * List of message types and their associated objects and parsers.
  *
- * @note eventually this class will go away, but it will change the java language level
+ * @apiNote  eventually this class will go away, but it will change the java language level
  *   requirements (so not right now)
  *
  * <pre>

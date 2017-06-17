@@ -2,7 +2,6 @@ package com.autofrog.xbee.api.cache;
 
 /**
  * Types of devices that can send node discovery messages
- * <p/>
  * <pre>
  * (C) Copyright 2015 Christopher Piggott (cpiggott@gmail.com)
  *
