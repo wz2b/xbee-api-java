@@ -214,8 +214,10 @@ public class XbeeMessageParser {
     }
 
     public void bytesIn(byte[] bytes) {
-        for (byte b : bytes) {
-            byteIn(b);
+        if(bytes != null) {
+            for (byte b : bytes) {
+                byteIn(b);
+            }
         }
     }
 

@@ -38,7 +38,7 @@ public enum XbeeMessageType {
 
     public final byte frameType;
     private final Class<? extends XbeeMessageBase> messageClass;
-    private final Class<? extends XbeeMessageParserBase> parser;
+    private final Class<? extends XbeeMessageParserBase> parserClass;
 
     private final static Map<Byte, XbeeMessageType> reverseTypeMap = new HashMap<Byte, XbeeMessageType>();
 
@@ -49,14 +49,14 @@ public enum XbeeMessageType {
 
     XbeeMessageType(byte value,
                     Class<? extends XbeeMessageBase> messageType,
-                    Class<? extends XbeeMessageParserBase> parser) {
+                    Class<? extends XbeeMessageParserBase> parserClass) {
         this.frameType = value;
         this.messageClass = messageType;
-        this.parser = parser;
+        this.parserClass = parserClass;
     }
 
     public Class<? extends XbeeMessageParserBase> getParserClass() {
-        return parser;
+        return parserClass;
     }
 
     public static XbeeMessageType getMessageClassFromFrameType(byte frameType) {

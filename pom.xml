@@ -38,11 +38,6 @@
         <tag>xbee-api-java-0.1.2</tag>
     </scm>
 
-    <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-    </properties>
-
     <build>
         <plugins>
             <plugin>

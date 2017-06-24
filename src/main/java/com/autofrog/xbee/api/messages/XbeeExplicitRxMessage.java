@@ -20,8 +20,6 @@ import com.autofrog.xbee.api.protocol.XbeeMessageType;
  * </pre>
  */
 public class XbeeExplicitRxMessage extends XbeeAddressableMessage {
-
-
     private final byte sourceEndpoint;
     private final byte destEndpoint;
     private final short profileId;
