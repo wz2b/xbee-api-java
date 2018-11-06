@@ -22,21 +22,21 @@ import java.util.Arrays;
  */
 public class XbeeDeviceId implements Comparable<XbeeDeviceId> {
 
-    private byte[] deviceId;
+    private final byte[] deviceIdBytes;
 
     public XbeeDeviceId(byte[] deviceId) {
-        this.deviceId = deviceId;
+        this.deviceIdBytes = deviceId;
     }
 
     public byte[] getBytes() {
-        return deviceId;
+        return deviceIdBytes;
     }
 
     public String toString() {
-        if (deviceId == null) {
+        if (deviceIdBytes == null) {
             return "null";
         } else {
-            return "0x" + XbeeUtilities.toHex(deviceId);
+            return "0x" + XbeeUtilities.toHex(deviceIdBytes);
         }
     }
 
@@ -49,12 +49,12 @@ public class XbeeDeviceId implements Comparable<XbeeDeviceId> {
             return false;
 
         XbeeDeviceId that = (XbeeDeviceId) compareTo;
-        return Arrays.equals(deviceId, that.deviceId);
+        return Arrays.equals(deviceIdBytes, that.deviceIdBytes);
     }
 
     @Override
     public int hashCode() {
-        return deviceId != null ? Arrays.hashCode(deviceId) : 0;
+        return deviceIdBytes != null ? Arrays.hashCode(deviceIdBytes) : 0;
     }
 
 
@@ -65,13 +65,13 @@ public class XbeeDeviceId implements Comparable<XbeeDeviceId> {
         if (that == null)
             return -1;
 
-        if(deviceId.length != that.deviceId.length) {
-            return deviceId.length - that.deviceId.length;
+        if(deviceIdBytes.length != that.deviceIdBytes.length) {
+            return deviceIdBytes.length - that.deviceIdBytes.length;
         }
 
-        for(int i=0; i < deviceId.length; i++) {
-            if(deviceId[i] != that.deviceId[i]) {
-                return deviceId[i] = that.deviceId[i];
+        for(int i = 0; i < deviceIdBytes.length; i++) {
+            if(deviceIdBytes[i] != that.deviceIdBytes[i]) {
+                return deviceIdBytes[i] - that.deviceIdBytes[i];
             }
         }
 
@@ -79,10 +79,10 @@ public class XbeeDeviceId implements Comparable<XbeeDeviceId> {
     }
 
     public boolean isUnknown() {
-        return Arrays.equals(deviceId, XbeeApiConstants.UNKNOWN_DEVICE_ID);
+        return Arrays.equals(deviceIdBytes, XbeeApiConstants.UNKNOWN_DEVICE_ID);
     }
 
     public boolean isBroadcast() {
-        return Arrays.equals(deviceId, XbeeApiConstants.BROADCAST_DEVICE_ID);
+        return Arrays.equals(deviceIdBytes, XbeeApiConstants.BROADCAST_DEVICE_ID);
     }
 }
