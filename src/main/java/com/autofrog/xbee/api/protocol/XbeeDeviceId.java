@@ -28,6 +28,16 @@ public class XbeeDeviceId implements Comparable<XbeeDeviceId> {
         this.deviceIdBytes = deviceId;
     }
 
+
+    public static XbeeDeviceId fromHexString(String hexAddress) {
+        if (hexAddress.length() % 2 != 0) {
+            return null;
+        } else {
+            byte[] bytes = XbeeUtilities.hexStringToByteArray(hexAddress);
+            return new XbeeDeviceId(bytes);
+        }
+    }
+
     public byte[] getBytes() {
         return deviceIdBytes;
     }
@@ -65,12 +75,12 @@ public class XbeeDeviceId implements Comparable<XbeeDeviceId> {
         if (that == null)
             return -1;
 
-        if(deviceIdBytes.length != that.deviceIdBytes.length) {
+        if (deviceIdBytes.length != that.deviceIdBytes.length) {
             return deviceIdBytes.length - that.deviceIdBytes.length;
         }
 
-        for(int i = 0; i < deviceIdBytes.length; i++) {
-            if(deviceIdBytes[i] != that.deviceIdBytes[i]) {
+        for (int i = 0; i < deviceIdBytes.length; i++) {
+            if (deviceIdBytes[i] != that.deviceIdBytes[i]) {
                 return deviceIdBytes[i] - that.deviceIdBytes[i];
             }
         }

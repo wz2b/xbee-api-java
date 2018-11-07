@@ -51,6 +51,19 @@ public class XbeeUtilities {
         return buf.toString();
     }
 
+    public static byte[] hexStringToByteArray(String hexAddress) {
+        if(hexAddress.startsWith("0x") || hexAddress.startsWith("0X")) {
+            hexAddress = hexAddress.substring(2);
+        }
+
+        int len = hexAddress.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(hexAddress.charAt(i), 16) << 4)
+                    + Character.digit(hexAddress.charAt(i+1), 16));
+        }
+        return data;
+    }
 
 
 }
